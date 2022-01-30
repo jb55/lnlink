@@ -9,9 +9,16 @@ import SwiftUI
 
 @main
 struct lightninglinkApp: App {
+    var info: GetInfo = .empty
+
+    init() {
+        let ln = LNSocket()
+        self.info = ln.testrun() ?? .empty
+    }
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(info: self.info)
         }
     }
 }
