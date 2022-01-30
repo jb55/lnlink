@@ -1,0 +1,14 @@
+
+lightninglink
+=============
+
+An iOS app for communicating with your clightning node over the lightning
+network
+
+
+Building
+--------
+
+enter lnsocket submodule and type:
+
+$ make ios
