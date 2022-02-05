@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C0359FB27AEE86600FF92CE /* QRScan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0359FA27AEE86600FF92CE /* QRScan.swift */; };
 		4C641D192788FF2F002A36C9 /* lightninglinkApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C641D182788FF2F002A36C9 /* lightninglinkApp.swift */; };
 		4C641D1B2788FF2F002A36C9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C641D1A2788FF2F002A36C9 /* ContentView.swift */; };
 		4C641D1D2788FF30002A36C9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C641D1C2788FF30002A36C9 /* Assets.xcassets */; };
@@ -41,6 +42,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4C0359FA27AEE86600FF92CE /* QRScan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScan.swift; sourceTree = "<group>"; };
+		4C0359FE27AEEE8500FF92CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4C641D152788FF2F002A36C9 /* lightninglink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lightninglink.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C641D182788FF2F002A36C9 /* lightninglinkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lightninglinkApp.swift; sourceTree = "<group>"; };
 		4C641D1A2788FF2F002A36C9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -117,12 +120,14 @@
 		4C641D172788FF2F002A36C9 /* lightninglink */ = {
 			isa = PBXGroup;
 			children = (
+				4C0359FE27AEEE8500FF92CE /* Info.plist */,
 				4C873FD427A6EF3F008C972C /* LNSocket.swift */,
 				4C641D182788FF2F002A36C9 /* lightninglinkApp.swift */,
 				4C641D1A2788FF2F002A36C9 /* ContentView.swift */,
 				4C641D1C2788FF30002A36C9 /* Assets.xcassets */,
 				4C641D1E2788FF30002A36C9 /* Preview Content */,
 				4C873FD627A6F1F5008C972C /* RPC.swift */,
+				4C0359FA27AEE86600FF92CE /* QRScan.swift */,
 			);
 			path = lightninglink;
 			sourceTree = "<group>";
@@ -310,6 +315,7 @@
 				4C641D492789083E002A36C9 /* lightninglink.c in Sources */,
 				4C641D192788FF2F002A36C9 /* lightninglinkApp.swift in Sources */,
 				4C873FD727A6F1F5008C972C /* RPC.swift in Sources */,
+				4C0359FB27AEE86600FF92CE /* QRScan.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -488,6 +494,7 @@
 				DEVELOPMENT_TEAM = XK7H4JAB3D;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = lightninglink/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -524,6 +531,7 @@
 				DEVELOPMENT_TEAM = XK7H4JAB3D;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = lightninglink/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
