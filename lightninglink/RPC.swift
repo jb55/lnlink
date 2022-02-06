@@ -14,6 +14,49 @@ public struct ResultWrapper<T: Decodable>: Decodable {
     public var result: T
 }
 
+public struct Output: Decodable {
+    public var txid: String
+    public var output: Int
+    public var value: Int64
+    public var amount_msat: String
+    public var scriptpubkey: String
+    public var address: String
+    public var status: String
+    public var blockheight: Int
+    public var reserved: Bool
+}
+
+public struct Channel: Decodable {
+    public var peer_id: String
+    public var connected: Bool
+    public var state: String
+    public var short_channel_id: String
+    public var channel_sat: Int64
+    public var channel_total_sat: Int64
+    public var funding_txid: String
+    public var funding_output: Int
+}
+
+public struct ListFunds: Decodable {
+    public var outputs: [Output]
+    public var channels: [Channel]
+
+    public static var empty = ListFunds(outputs: [], channels: [])
+}
+
+public struct Pay: Decodable {
+    public var destination: String
+    public var payment_hash: String
+    public var created_at: Float
+    public var parts: Int
+    public var msatoshi: Int64
+    public var amount_msat: String
+    public var msatoshi_sent: Int64
+    public var amount_sent_msat: String
+    public var payment_preimage: String
+    public var status: String
+}
+
 public struct GetInfo: Decodable {
     public var alias: String
     public var id: String
@@ -22,8 +65,9 @@ public struct GetInfo: Decodable {
     public var num_peers: Int
     public var msatoshi_fees_collected: Int
     public var num_active_channels: Int
+    public var blockheight: Int
 
-    public static var empty = GetInfo(alias: "", id: "", color: "", network: "", num_peers: 0, msatoshi_fees_collected: 0, num_active_channels: 0)
+    public static var empty = GetInfo(alias: "", id: "", color: "", network: "", num_peers: 0, msatoshi_fees_collected: 0, num_active_channels: 0, blockheight: 0)
 }
 
 public enum RequestErrorType: Error {
@@ -78,6 +122,7 @@ func parse_connection_string(_ cs: String) -> (String, String)? {
 
 public func performRpcOnce<IN: Encodable, OUT: Decodable>(
     connectionString: String, operation: String, authToken: String,
+    timeout_ms: Int32,
     params: IN
 ) -> RequestRes<OUT> {
     guard let parts = parse_connection_string(connectionString) else {
@@ -98,11 +143,11 @@ public func performRpcOnce<IN: Encodable, OUT: Decodable>(
         return .failure(RequestError(errorType: .initFailed))
     }
 
-    return performRpc(ln: ln, operation: operation, authToken: authToken, params: params)
+    return performRpc(ln: ln, operation: operation, authToken: authToken, timeout_ms: timeout_ms, params: params)
 }
 
 public func performRpc<IN: Encodable, OUT: Decodable>(
-    ln: LNSocket, operation: String, authToken: String, params: IN) -> RequestRes<OUT>
+    ln: LNSocket, operation: String, authToken: String, timeout_ms: Int32, params: IN) -> RequestRes<OUT>
 {
 
     guard let msg = make_commando_msg(authToken: authToken, operation: operation, params: params) else {
@@ -113,7 +158,7 @@ public func performRpc<IN: Encodable, OUT: Decodable>(
         return .failure(RequestError(errorType: .writeFailed))
     }
 
-    switch commando_read_all(ln: ln) {
+    switch commando_read_all(ln: ln, timeout_ms: timeout_ms) {
     case .failure(let req_err):
         return .failure(req_err)
 
@@ -194,16 +239,34 @@ func commando_read_all(ln: LNSocket, timeout_ms: Int32 = 2000) -> RequestRes<Dat
         } else if msgtype == COMMANDO_REPLY_CONTINUES {
             continue
         } else {
-            return .failure(RequestError(errorType: .badCommandoMsgType(Int(msgtype))))
+            //return .failure(RequestError(errorType: .badCommandoMsgType(Int(msgtype))))
+            // we could get random messages like channel update! just ignore them
+            continue
         }
     }
 
     return .success(all_data)
 }
 
+public let default_timeout: Int32 = 3000
 
 public func rpc_getinfo(ln: LNSocket, token: String) -> RequestRes<GetInfo>
 {
     let params: Array<String> = []
-    return performRpc(ln: ln, operation: "getinfo", authToken: token, params: params)
+    return performRpc(ln: ln, operation: "getinfo", authToken: token, timeout_ms: default_timeout, params: params)
+}
+
+public func rpc_pay(ln: LNSocket, token: String, bolt11: String, amount_msat: Int64?) -> RequestRes<Pay>
+{
+    var params: Array<String> = [ bolt11 ]
+    if amount_msat != nil {
+        params.append("\(amount_msat!)")
+    }
+    return performRpc(ln: ln, operation: "pay", authToken: token, timeout_ms: 30000, params: params)
+}
+
+public func rpc_listfunds(ln: LNSocket, token: String) -> RequestRes<ListFunds>
+{
+    let params: Array<String> = []
+    return performRpc(ln: ln, operation: "listfunds", authToken: token, timeout_ms: default_timeout, params: params)
 }

@@ -12,30 +12,19 @@ public class LNSocket {
         lnsocket_genkey(self.ln)
     }
 
-    func testrun() -> GetInfo? {
-        let node_id = "03f3c108ccd536b8526841f0a5c58212bb9e6584a1eb493080e7c1cc34f82dad71"
-        let host = "24.84.152.187"
+    func connect_and_init(node_id: String, host: String) -> Bool {
 
         self.genkey()
 
         guard self.connect(node_id: node_id, host: host) else {
-            return nil
+            return false
         }
 
         guard self.perform_init() else {
-            return nil
+            return false
         }
 
-        let res = rpc_getinfo(ln: self, token: "")
-
-        switch res {
-        case .success(let getinfo):
-            return getinfo
-
-        case .failure(let err):
-            print("\(err)")
-            return nil
-        }
+        return true
     }
 
     func connect(node_id: String, host: String) -> Bool {
