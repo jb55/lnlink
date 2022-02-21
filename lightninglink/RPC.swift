@@ -248,7 +248,7 @@ func commando_read_all(ln: LNSocket, timeout_ms: Int32 = 2000) -> RequestRes<Dat
     return .success(all_data)
 }
 
-public let default_timeout: Int32 = 3000
+public let default_timeout: Int32 = 8000
 
 public func rpc_getinfo(ln: LNSocket, token: String) -> RequestRes<GetInfo>
 {
@@ -258,6 +258,7 @@ public func rpc_getinfo(ln: LNSocket, token: String) -> RequestRes<GetInfo>
 
 public func rpc_pay(ln: LNSocket, token: String, bolt11: String, amount_msat: Int64?) -> RequestRes<Pay>
 {
+
     var params: Array<String> = [ bolt11 ]
     if amount_msat != nil {
         params.append("\(amount_msat!)")

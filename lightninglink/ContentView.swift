@@ -24,7 +24,7 @@ enum ActiveSheet: Identifiable {
     }
 
     case qr
-    case pay(Invoice, String)
+    case pay(Int64, String)
 }
 
 struct Funds {
@@ -55,18 +55,20 @@ struct ContentView: View {
     @State private var last_pay: Pay?
     @State private var funds: Funds
 
-    private var ln: LNSocket
-    private var token: String
+    private var lnlink: LNLink
 
-    init(info: GetInfo, ln: LNSocket, token: String, funds: ListFunds) {
+    init(info: GetInfo, lnlink: LNLink, funds: ListFunds) {
         self.info = info
-        self.ln = ln
-        self.token = token
+        self.lnlink = lnlink
         self.funds = Funds.from_listfunds(fs: funds)
     }
 
     func refresh_funds() {
-        let funds = fetch_funds(ln: self.ln, token: self.token)
+        let ln = LNSocket()
+        guard ln.connect_and_init(node_id: self.lnlink.node_id, host: self.lnlink.host) else {
+            return
+        }
+        let funds = fetch_funds(ln: ln, token: lnlink.token)
         self.funds = Funds.from_listfunds(fs: funds)
     }
 
@@ -119,15 +121,15 @@ struct ContentView: View {
                         let index = code.index(code.startIndex, offsetBy: 10)
                         invstr = String(code[index...])
                     }
-                    let m_parsed = parseInvoice(invstr)
+                    let m_parsed = parseInvoiceAmount(invstr)
                     guard let parsed = m_parsed else {
                         return
                     }
                     self.activeSheet = .pay(parsed, invstr)
                 }
 
-            case .pay(let inv, let raw):
-                PayView(invoice_str: raw, invoice: inv, ln: self.ln, token: self.token)
+            case .pay(let amt, let raw):
+                PayView(invoice_str: raw, amount: amt, lnlink: self.lnlink)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for:  .sentPayment)) { payment in
@@ -137,11 +139,12 @@ struct ContentView: View {
     }
 }
 
+/*
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        let ln = LNSocket()
         Group {
-            ContentView(info: .empty, ln: ln, token: "", funds: .empty)
+            ContentView(info: .empty, lnlink: ln, token: "", funds: .empty)
         }
     }
 }
+ */

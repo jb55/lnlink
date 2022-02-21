@@ -8,29 +8,50 @@
 import Foundation
 
 
-public struct Bolt11Invoice {
-    var msats: Int64
-}
-
-public struct Bolt12Invoice {
-    var msats: Int64
-}
-
-public enum Invoice {
-    case bolt11(Bolt11Invoice)
-    case bolt12(Bolt12Invoice)
-
-    func amount() -> Int64 {
-        return invoiceAmount(self)
+public func parseInvoiceAmount(_ inv: String) -> Int64?
+{
+    if !inv.starts(with: "lnbc") {
+        return nil
     }
 
-    static var empty: Invoice {
-        let b11 = Bolt11Invoice(msats: 0)
-        let inv: Invoice = .bolt11(b11)
-        return inv
+    var ind = 4
+    var num: String = ""
+    var scale: Character = Character("p")
+
+    // number part
+    while true {
+        let c = inv[inv.index(inv.startIndex, offsetBy: ind)]
+        ind += 1
+
+        if c >= "0" && c <= "9" {
+            continue
+        } else {
+            let start_ind = inv.index(inv.startIndex, offsetBy: 4)
+            let end_ind = inv.index(inv.startIndex, offsetBy: ind - 1)
+            scale = inv[inv.index(inv.startIndex, offsetBy: ind - 1)]
+            num = String(inv[start_ind..<end_ind])
+            break
+        }
+    }
+
+    if !(scale == "m" || scale == "u" || scale == "n" || scale == "p") {
+        return nil
+    }
+
+    guard let n = Int(num) else {
+        return nil
+    }
+
+    switch scale {
+    case "m": return Int64(n * 100000000);
+    case "u": return Int64(n * 100000);
+    case "n": return Int64(n * 100);
+    case "p": return Int64(n * 1);
+    default: return nil
     }
 }
 
+/*
 public func parseInvoice(_ str: String) -> Invoice?
 {
     // decode bech32
@@ -61,3 +82,4 @@ public func invoiceAmount(_ inv: Invoice) -> Int64
     }
 
 }
+ */

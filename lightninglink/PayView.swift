@@ -7,21 +7,27 @@
 
 import SwiftUI
 
+func render_amount(_ amount: Int64) -> String {
+    if amount < 1000 {
+        return "\(amount) msats"
+    }
+
+    return "\(amount / 1000) sats"
+}
+
 struct PayView: View {
     var invoice_str: String
-    var invoice: Invoice
-    var ln: LNSocket
-    var token: String
+    var amount: Int64
+    var lnlink: LNLink
     @State var pay_result: Pay?
     @State var error: String?
 
     @Environment(\.presentationMode) var presentationMode
 
-    init(invoice_str: String, invoice: Invoice, ln: LNSocket, token: String) {
+    init(invoice_str: String, amount: Int64, lnlink: LNLink) {
         self.invoice_str = invoice_str
-        self.invoice = invoice
-        self.ln = ln
-        self.token = token
+        self.amount = amount
+        self.lnlink = lnlink
     }
 
     var successView: some View {
@@ -47,7 +53,7 @@ struct PayView: View {
                 .font(.largeTitle)
             Spacer()
             Text("Pay")
-            Text("\(self.invoice.amount()) msats?")
+            Text("\(render_amount(self.amount))?")
                 .font(.title)
             Text("\(self.error ?? "")")
             Spacer()
@@ -60,9 +66,17 @@ struct PayView: View {
                 Spacer()
 
                 Button("Confirm") {
+                    // do a fresh connection for each payment
+                    let ln = LNSocket()
+
+                    guard ln.connect_and_init(node_id: self.lnlink.node_id, host: self.lnlink.host) else {
+                        self.error = "Failed to connect, please try again!"
+                        return
+                    }
+
                     let res = rpc_pay(
-                        ln: self.ln,
-                        token: self.token,
+                        ln: ln,
+                        token: lnlink.token,
                         bolt11: self.invoice_str,
                         amount_msat: nil)
 

@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		4C0359FB27AEE86600FF92CE /* QRScan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0359FA27AEE86600FF92CE /* QRScan.swift */; };
 		4C035A0027AEF90000FF92CE /* PayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0359FF27AEF90000FF92CE /* PayView.swift */; };
-		4C035A0227AEFB2400FF92CE /* Bech32.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C035A0127AEFB2400FF92CE /* Bech32.swift */; };
 		4C035A0427AEFD2F00FF92CE /* Invoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C035A0327AEFD2F00FF92CE /* Invoice.swift */; };
 		4C641D192788FF2F002A36C9 /* lightninglinkApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C641D182788FF2F002A36C9 /* lightninglinkApp.swift */; };
 		4C641D1B2788FF2F002A36C9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C641D1A2788FF2F002A36C9 /* ContentView.swift */; };
@@ -19,12 +18,12 @@
 		4C641D342788FF31002A36C9 /* lightninglinkUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C641D332788FF31002A36C9 /* lightninglinkUITests.swift */; };
 		4C641D362788FF31002A36C9 /* lightninglinkUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C641D352788FF31002A36C9 /* lightninglinkUITestsLaunchTests.swift */; };
 		4C641D492789083E002A36C9 /* lightninglink.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C641D482789083E002A36C9 /* lightninglink.c */; };
-		4C641D4B279CFA32002A36C9 /* lnsocket in Resources */ = {isa = PBXBuildFile; fileRef = 4C641D4A279CFA32002A36C9 /* lnsocket */; };
 		4C873FCF27A62DC1008C972C /* lnsocket.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C873FCE27A62DC1008C972C /* lnsocket.a */; };
 		4C873FD127A62DE7008C972C /* libsodium.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C873FD027A62DE7008C972C /* libsodium.a */; };
 		4C873FD327A62DF5008C972C /* libsecp256k1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C873FD227A62DF5008C972C /* libsecp256k1.a */; };
 		4C873FD527A6EF3F008C972C /* LNSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C873FD427A6EF3F008C972C /* LNSocket.swift */; };
 		4C873FD727A6F1F5008C972C /* RPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C873FD627A6F1F5008C972C /* RPC.swift */; };
+		4C8B289327B44EAF00DF3372 /* LNLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B289227B44EAF00DF3372 /* LNLink.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,7 +47,6 @@
 		4C0359FA27AEE86600FF92CE /* QRScan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScan.swift; sourceTree = "<group>"; };
 		4C0359FE27AEEE8500FF92CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4C0359FF27AEF90000FF92CE /* PayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayView.swift; sourceTree = "<group>"; };
-		4C035A0127AEFB2400FF92CE /* Bech32.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bech32.swift; sourceTree = "<group>"; };
 		4C035A0327AEFD2F00FF92CE /* Invoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Invoice.swift; sourceTree = "<group>"; };
 		4C641D152788FF2F002A36C9 /* lightninglink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lightninglink.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C641D182788FF2F002A36C9 /* lightninglinkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lightninglinkApp.swift; sourceTree = "<group>"; };
@@ -70,6 +68,7 @@
 		4C873FD227A62DF5008C972C /* libsecp256k1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsecp256k1.a; path = lnsocket/target/ios/libsecp256k1.a; sourceTree = "<group>"; };
 		4C873FD427A6EF3F008C972C /* LNSocket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LNSocket.swift; sourceTree = "<group>"; };
 		4C873FD627A6F1F5008C972C /* RPC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPC.swift; sourceTree = "<group>"; };
+		4C8B289227B44EAF00DF3372 /* LNLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNLink.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,8 +134,8 @@
 				4C873FD627A6F1F5008C972C /* RPC.swift */,
 				4C0359FA27AEE86600FF92CE /* QRScan.swift */,
 				4C0359FF27AEF90000FF92CE /* PayView.swift */,
-				4C035A0127AEFB2400FF92CE /* Bech32.swift */,
 				4C035A0327AEFD2F00FF92CE /* Invoice.swift */,
+				4C8B289227B44EAF00DF3372 /* LNLink.swift */,
 			);
 			path = lightninglink;
 			sourceTree = "<group>";
@@ -294,7 +293,6 @@
 			files = (
 				4C641D202788FF30002A36C9 /* Preview Assets.xcassets in Resources */,
 				4C641D1D2788FF30002A36C9 /* Assets.xcassets in Resources */,
-				4C641D4B279CFA32002A36C9 /* lnsocket in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -322,11 +320,11 @@
 				4C035A0027AEF90000FF92CE /* PayView.swift in Sources */,
 				4C873FD527A6EF3F008C972C /* LNSocket.swift in Sources */,
 				4C641D1B2788FF2F002A36C9 /* ContentView.swift in Sources */,
+				4C8B289327B44EAF00DF3372 /* LNLink.swift in Sources */,
 				4C641D492789083E002A36C9 /* lightninglink.c in Sources */,
 				4C035A0427AEFD2F00FF92CE /* Invoice.swift in Sources */,
 				4C641D192788FF2F002A36C9 /* lightninglinkApp.swift in Sources */,
 				4C873FD727A6F1F5008C972C /* RPC.swift in Sources */,
-				4C035A0227AEFB2400FF92CE /* Bech32.swift in Sources */,
 				4C0359FB27AEE86600FF92CE /* QRScan.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

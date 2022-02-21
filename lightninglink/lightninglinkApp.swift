@@ -11,14 +11,15 @@ import SwiftUI
 struct lightninglinkApp: App {
     var info: GetInfo = .empty
     var funds: ListFunds = .empty
-    var ln: LNSocket
-    var token: String
+    var lnlink: LNLink
 
     init() {
         self.ln = LNSocket()
         self.token = ""
         let node_id = "03f3c108ccd536b8526841f0a5c58212bb9e6584a1eb493080e7c1cc34f82dad71"
         let host = "24.84.152.187"
+        let lnlink = LNLink(token: token, host: host, node_id: node_id)
+        self.lnlink = lnlink
 
         guard ln.connect_and_init(node_id: node_id, host: host) else {
             return
@@ -30,7 +31,7 @@ struct lightninglinkApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(info: self.info, ln: self.ln, token: self.token, funds: self.funds)
+            ContentView(info: self.info, lnlink: self.lnlink, funds: self.funds)
         }
     }
 }
