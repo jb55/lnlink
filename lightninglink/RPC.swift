@@ -145,12 +145,8 @@ public func performRpcOnce<IN: Encodable, OUT: Decodable>(
     let ln = LNSocket()
     ln.genkey()
 
-    guard ln.connect(node_id: node_id, host: host) else {
+    guard ln.connect_and_init(node_id: node_id, host: host) else {
         return .failure(RequestError(errorType: .connectionFailed))
-    }
-
-    guard ln.perform_init() else {
-        return .failure(RequestError(errorType: .initFailed))
     }
 
     return performRpc(ln: ln, operation: operation, authToken: authToken, timeout_ms: timeout_ms, params: params)
