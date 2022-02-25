@@ -13,6 +13,17 @@ extension Notification.Name {
     }
 }
 
+enum ActiveAlert: Identifiable {
+    var id: String {
+        switch self {
+        case .pay:
+            return "pay"
+        }
+    }
+
+    case pay(InvoiceAmount, String)
+}
+
 enum ActiveSheet: Identifiable {
     var id: String {
         switch self {
@@ -24,7 +35,7 @@ enum ActiveSheet: Identifiable {
     }
 
     case qr
-    case pay(Int64, String)
+    case pay(InvoiceAmount, String)
 }
 
 struct Funds {
@@ -51,7 +62,9 @@ struct Funds {
 
 struct ContentView: View {
     @State private var info: GetInfo
-    @State private var activeSheet: ActiveSheet?
+    @State private var active_sheet: ActiveSheet?
+    @State private var active_alert: ActiveAlert?
+    @State private var has_alert: Bool
     @State private var last_pay: Pay?
     @State private var funds: Funds
 
@@ -60,6 +73,7 @@ struct ContentView: View {
     init(info: GetInfo, lnlink: LNLink, funds: ListFunds) {
         self.info = info
         self.lnlink = lnlink
+        self.has_alert = false
         self.funds = Funds.from_listfunds(fs: funds)
     }
 
@@ -86,6 +100,17 @@ struct ContentView: View {
         return "-\(pay.msatoshi) msats (\(pay.msatoshi_sent) msats sent)"
     }
 
+    func check_pay() {
+        guard let (amt, inv) = get_clipboard_invoice() else {
+            self.active_sheet = .qr
+            self.has_alert = false
+            return
+        }
+
+        self.has_alert = true
+        self.active_alert = .pay(amt, inv)
+    }
+
     var body: some View {
         VStack {
             Group {
@@ -106,13 +131,29 @@ struct ContentView: View {
             Spacer()
             HStack {
                 Spacer()
-                Button("Pay",
-                       action: { self.activeSheet = .qr })
+                Button("Pay", action: check_pay)
                 .font(.title)
                 .padding()
             }
         }
-        .sheet(item: $activeSheet) { sheet in
+        .alert("Invoice found in clipboard", isPresented: $has_alert, presenting: active_alert, actions: { alert in
+            Button("Cancel") {
+                self.has_alert = false
+            }
+            Button("Use QR Instead") {
+                self.active_sheet = .qr
+            }
+            Button("Yes") {
+                self.active_alert = nil
+                switch alert {
+                case .pay(let amt, let inv):
+                    self.active_sheet = .pay(amt, inv)
+                }
+            }
+        }, message: { alert in
+            Text("There is an invoice in your clipboard, should we use that for payment?")
+        })
+        .sheet(item: $active_sheet) { sheet in
             switch sheet {
             case .qr:
                 QRScanner() { code in
@@ -125,15 +166,16 @@ struct ContentView: View {
                     guard let parsed = m_parsed else {
                         return
                     }
-                    self.activeSheet = .pay(parsed, invstr)
+                    self.active_sheet = .pay(parsed, invstr)
                 }
 
             case .pay(let amt, let raw):
                 PayView(invoice_str: raw, amount: amt, lnlink: self.lnlink)
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for:  .sentPayment)) { payment in
+        .onReceive(NotificationCenter.default.publisher(for: .sentPayment)) { payment in
             last_pay = payment.object as! Pay
+            self.active_sheet = nil
             refresh_funds()
         }
     }
@@ -148,3 +190,16 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
  */
+
+
+func get_clipboard_invoice() -> (InvoiceAmount, String)? {
+    guard let inv = UIPasteboard.general.string else {
+        return nil
+    }
+
+    guard let amt = parseInvoiceAmount(inv) else {
+        return nil
+    }
+
+    return (amt, inv)
+}

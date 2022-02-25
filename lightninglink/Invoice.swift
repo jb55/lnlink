@@ -8,8 +8,16 @@
 import Foundation
 
 
-public func parseInvoiceAmount(_ inv: String) -> Int64?
+public enum InvoiceAmount {
+    case amount(Int64)
+    case any
+}
+
+// this is just a quick stopgap before we have full invoice parsing
+public func parseInvoiceAmount(_ invoice: String) -> InvoiceAmount?
 {
+    let inv = invoice.lowercased()
+
     if !inv.starts(with: "lnbc") {
         return nil
     }
@@ -17,6 +25,7 @@ public func parseInvoiceAmount(_ inv: String) -> Int64?
     var ind = 4
     var num: String = ""
     var scale: Character = Character("p")
+    var sep: Character
 
     // number part
     while true {
@@ -28,8 +37,15 @@ public func parseInvoiceAmount(_ inv: String) -> Int64?
         } else {
             let start_ind = inv.index(inv.startIndex, offsetBy: 4)
             let end_ind = inv.index(inv.startIndex, offsetBy: ind - 1)
+
             scale = inv[inv.index(inv.startIndex, offsetBy: ind - 1)]
+            sep = inv[inv.index(inv.startIndex, offsetBy: ind)]
             num = String(inv[start_ind..<end_ind])
+
+            if sep != "1" {
+                return .any
+            }
+
             break
         }
     }
@@ -43,10 +59,10 @@ public func parseInvoiceAmount(_ inv: String) -> Int64?
     }
 
     switch scale {
-    case "m": return Int64(n * 100000000);
-    case "u": return Int64(n * 100000);
-    case "n": return Int64(n * 100);
-    case "p": return Int64(n * 1);
+    case "m": return .amount(Int64(n * 100000000));
+    case "u": return .amount(Int64(n * 100000));
+    case "n": return .amount(Int64(n * 100));
+    case "p": return .amount(Int64(n * 1));
     default: return nil
     }
 }
