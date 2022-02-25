@@ -136,11 +136,8 @@ struct ContentView: View {
                 .padding()
             }
         }
-        .alert("Invoice found in clipboard", isPresented: $has_alert, presenting: active_alert, actions: { alert in
-            Button("Cancel") {
-                self.has_alert = false
-            }
-            Button("Use QR Instead") {
+        .alert("Use invoice in clipboard?", isPresented: $has_alert, presenting: active_alert, actions: { alert in
+            Button("Use QR") {
                 self.active_sheet = .qr
             }
             Button("Yes") {
