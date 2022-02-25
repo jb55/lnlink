@@ -264,10 +264,9 @@ public func rpc_getinfo(ln: LNSocket, token: String) -> RequestRes<GetInfo>
 
 public func rpc_pay(ln: LNSocket, token: String, bolt11: String, amount_msat: Int64?) -> RequestRes<Pay>
 {
-
     var params: Array<String> = [ bolt11 ]
     if amount_msat != nil {
-        params.append("\(amount_msat!)")
+        params.append("\(amount_msat!)msat")
     }
     return performRpc(ln: ln, operation: "pay", authToken: token, timeout_ms: 30000, params: params)
 }
