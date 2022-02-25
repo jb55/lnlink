@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 extension Notification.Name {
     static var sentPayment: Notification.Name {
@@ -60,6 +61,8 @@ struct Funds {
     }
 }
 
+let SCAN_TYPES: [AVMetadataObject.ObjectType] = [.qr]
+
 struct ContentView: View {
     @State private var info: GetInfo
     @State private var active_sheet: ActiveSheet?
@@ -107,8 +110,9 @@ struct ContentView: View {
             return
         }
 
-        self.has_alert = true
+        self.active_sheet = nil
         self.active_alert = .pay(amt, inv)
+        self.has_alert = true
     }
 
     var body: some View {
@@ -136,34 +140,43 @@ struct ContentView: View {
                 .padding()
             }
         }
-        .alert("Use invoice in clipboard?", isPresented: $has_alert, presenting: active_alert, actions: { alert in
+        .alert("Use invoice in clipboard?", isPresented: $has_alert, presenting: active_alert) { alert in
             Button("Use QR") {
+                self.has_alert = false
                 self.active_sheet = .qr
             }
             Button("Yes") {
+                self.has_alert = false
                 self.active_alert = nil
                 switch alert {
                 case .pay(let amt, let inv):
                     self.active_sheet = .pay(amt, inv)
                 }
             }
-        }, message: { alert in
-            Text("There is an invoice in your clipboard, should we use that for payment?")
-        })
+        }
         .sheet(item: $active_sheet) { sheet in
             switch sheet {
             case .qr:
-                QRScanner() { code in
-                    var invstr: String = code
-                    if code.starts(with: "lightning:") {
-                        let index = code.index(code.startIndex, offsetBy: 10)
-                        invstr = String(code[index...])
-                    }
-                    let m_parsed = parseInvoiceAmount(invstr)
-                    guard let parsed = m_parsed else {
+                CodeScannerView(codeTypes: SCAN_TYPES) { res in
+                    switch res {
+                    case .success(let scan_res):
+                        let code = scan_res.string
+                        var invstr: String = code
+                        if code.starts(with: "lightning:") {
+                            let index = code.index(code.startIndex, offsetBy: 10)
+                            invstr = String(code[index...])
+                        }
+                        let m_parsed = parseInvoiceAmount(invstr)
+                        guard let parsed = m_parsed else {
+                            return
+                        }
+                        self.active_sheet = .pay(parsed, invstr)
+
+                    case .failure:
+                        self.active_sheet = nil
                         return
                     }
-                    self.active_sheet = .pay(parsed, invstr)
+
                 }
 
             case .pay(let amt, let raw):
