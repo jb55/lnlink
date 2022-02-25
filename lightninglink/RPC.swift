@@ -8,10 +8,18 @@
 import Foundation
 
 
-public typealias RequestRes<T> = Result<T, RequestError>
+public typealias RequestRes<T> = Result<T, RequestError<RpcErrorData>>
 
 public struct ResultWrapper<T: Decodable>: Decodable {
     public var result: T
+}
+
+public struct ErrorWrapper<T: Decodable>: Decodable {
+    public var error: T
+}
+
+public struct RpcErrorData: Decodable {
+    public var message: String
 }
 
 public struct Output: Decodable {
@@ -86,9 +94,10 @@ public enum RequestErrorType: Error {
     case unknown(String)
 }
 
-public struct RequestError: Error, CustomStringConvertible {
+public struct RequestError<E: Decodable>: Error, CustomStringConvertible {
     public var response: HTTPURLResponse?
     public var respData: Data = Data()
+    public var decoded: E?
     public var errorType: RequestErrorType
 
     init(errorType: RequestErrorType) {
@@ -98,6 +107,7 @@ public struct RequestError: Error, CustomStringConvertible {
     init(respData: Data, errorType: RequestErrorType) {
         self.respData = respData
         self.errorType = errorType
+        self.decoded = maybe_decode_error_json(respData)
     }
 
     public var description: String {
@@ -270,4 +280,12 @@ public func rpc_listfunds(ln: LNSocket, token: String) -> RequestRes<ListFunds>
 {
     let params: Array<String> = []
     return performRpc(ln: ln, operation: "listfunds", authToken: token, timeout_ms: default_timeout, params: params)
+}
+
+public func maybe_decode_error_json<T: Decodable>(_ dat: Data) -> T? {
+    do {
+        return try JSONDecoder().decode(ErrorWrapper<T>.self, from: dat).error
+    } catch {
+        return nil
+    }
 }

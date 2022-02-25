@@ -50,6 +50,7 @@ struct PayView: View {
             Text("\(render_amount(self.amount))")
                 .font(.title)
             Text("\(self.error ?? "")")
+                .foregroundColor(Color.red)
             Spacer()
             HStack {
                 Button("Cancel") {
@@ -64,7 +65,7 @@ struct PayView: View {
 
                     switch res {
                     case .left(let err):
-                        self.error = err
+                        self.error = "Error: \(err)"
 
                     case .right(let pay):
                         print(pay)
@@ -113,7 +114,8 @@ func confirm_payment(bolt11: String, lnlink: LNLink) -> Either<String, Pay> {
     switch res {
     case .failure(let req_err):
         // handle error
-        return .left(req_err.description)
+        let errmsg = req_err.decoded?.message ?? req_err.description
+        return .left(errmsg)
 
     case .success(let pay):
         return .right(pay)
