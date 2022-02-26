@@ -256,7 +256,7 @@ func commando_read_all(ln: LNSocket, timeout_ms: Int32 = 2000) -> RequestRes<Dat
 
 public let default_timeout: Int32 = 8000
 
-public func rpc_getinfo(ln: LNSocket, token: String) -> RequestRes<GetInfo>
+public func rpc_getinfo(ln: LNSocket, token: String, timeout: Int32 = default_timeout) -> RequestRes<GetInfo>
 {
     let params: Array<String> = []
     return performRpc(ln: ln, operation: "getinfo", authToken: token, timeout_ms: default_timeout, params: params)

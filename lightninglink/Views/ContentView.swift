@@ -25,8 +25,8 @@ enum ActiveAlert: Identifiable {
     case pay(InvoiceAmount, String)
 }
 
-enum ActiveSheet: Identifiable {
-    var id: String {
+public enum ActiveSheet: Identifiable {
+    public var id: String {
         switch self {
         case .qr:
             return "qrcode"
@@ -64,20 +64,20 @@ struct Funds {
 let SCAN_TYPES: [AVMetadataObject.ObjectType] = [.qr]
 
 struct ContentView: View {
-    @State private var info: GetInfo
     @State private var active_sheet: ActiveSheet?
     @State private var active_alert: ActiveAlert?
     @State private var has_alert: Bool
     @State private var last_pay: Pay?
+    @State private var dashboard: Dashboard
     @State private var funds: Funds
 
     private var lnlink: LNLink
 
-    init(info: GetInfo, lnlink: LNLink, funds: ListFunds) {
-        self.info = info
+    init(dashboard: Dashboard, lnlink: LNLink) {
+        self.dashboard = dashboard
         self.lnlink = lnlink
         self.has_alert = false
-        self.funds = Funds.from_listfunds(fs: funds)
+        self.funds = Funds.from_listfunds(fs: dashboard.funds)
     }
 
     func refresh_funds() {
@@ -118,11 +118,11 @@ struct ContentView: View {
     var body: some View {
         VStack {
             Group {
-                Text(self.info.alias)
+                Text(self.dashboard.info.alias)
                     .font(.largeTitle)
                     .padding()
-                Text("\(self.info.num_active_channels) active channels")
-                Text("\(self.info.msatoshi_fees_collected / 1000) sats collected in fees")
+                Text("\(self.dashboard.info.num_active_channels) active channels")
+                Text("\(self.dashboard.info.msatoshi_fees_collected / 1000) sats collected in fees")
                 }
             Spacer()
             Text("\(format_last_pay())")

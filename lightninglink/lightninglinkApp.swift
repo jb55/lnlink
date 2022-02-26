@@ -7,31 +7,67 @@
 
 import SwiftUI
 
+public struct Dashboard {
+    public let info: GetInfo
+    public let funds: ListFunds
+
+    public static var empty: Dashboard = Dashboard(info: .empty, funds: .empty)
+}
+
+func fetch_dashboard(lnlink: LNLink) -> Either<String, Dashboard> {
+    let ln = LNSocket()
+
+    guard ln.connect_and_init(node_id: lnlink.node_id, host: lnlink.host) else {
+        return .left("Connect failed :(")
+    }
+
+    let res = rpc_getinfo(ln: ln, token: lnlink.token)
+    switch res {
+    case .failure(let res_err):
+        return .left(res_err.decoded?.message ?? res_err.description)
+    case .success(let info):
+        let res2 = rpc_listfunds(ln: ln, token: lnlink.token)
+        switch res2 {
+        case .failure(let err):
+            return .left(err.decoded?.message ?? err.description)
+        case .success(let funds):
+            return .right(Dashboard(info: info, funds: funds))
+        }
+    }
+}
+
 @main
 struct lightninglinkApp: App {
-    var info: GetInfo = .empty
-    var funds: ListFunds = .empty
-    var lnlink: LNLink
-
-    init() {
-        self.ln = LNSocket()
-        self.token = ""
-        let node_id = "03f3c108ccd536b8526841f0a5c58212bb9e6584a1eb493080e7c1cc34f82dad71"
-        let host = "24.84.152.187"
-        let lnlink = LNLink(token: token, host: host, node_id: node_id)
-        self.lnlink = lnlink
-
-        guard ln.connect_and_init(node_id: node_id, host: host) else {
-            return
-        }
-
-        self.info = fetch_info(ln: ln, token: token)
-        self.funds = fetch_funds(ln: ln, token: token)
-    }
+    @State var dashboard: Dashboard?
+    @State var lnlink: LNLink? = load_lnlink()
+    @State var error: String?
 
     var body: some Scene {
         WindowGroup {
-            ContentView(info: self.info, lnlink: self.lnlink, funds: self.funds)
+            if self.error != nil {
+                Text("Error: \(self.error!)")
+            } else {
+                if self.lnlink != nil {
+                    if self.dashboard != nil {
+                        ContentView(dashboard: self.dashboard!, lnlink: self.lnlink!)
+                    } else {
+                        VStack {
+                            Text("Connecting...")
+                                .onAppear() {
+                                    let res = fetch_dashboard(lnlink: self.lnlink!)
+                                    switch res {
+                                    case .left(let err):
+                                        self.error = err
+                                    case .right(let dash):
+                                        self.dashboard = dash
+                                    }
+                                }
+                        }
+                    }
+                } else {
+                    SetupView()
+                }
+                }
         }
     }
 }
@@ -55,4 +91,22 @@ func fetch_funds(ln: LNSocket, token: String) -> ListFunds {
     case .success(let funds):
         return funds
     }
+}
+
+func save_lnlink(lnlink: LNLink) {
+    UserDefaults.standard.set(lnlink.token, forKey: "lnlink_token")
+    UserDefaults.standard.set(lnlink.node_id, forKey: "lnlink_nodeid")
+    UserDefaults.standard.set(lnlink.host, forKey: "lnlink_host")
+}
+
+func load_lnlink() -> LNLink? {
+    let m_token = UserDefaults.standard.string(forKey: "lnlink_token")
+    let m_nodeid = UserDefaults.standard.string(forKey: "lnlink_nodeid")
+    let m_host = UserDefaults.standard.string(forKey: "lnlink_host")
+
+    guard let token = m_token else { return nil }
+    guard let node_id = m_nodeid else { return nil }
+    guard let host = m_host else { return nil }
+
+    return LNLink(token: token, host: host, node_id: node_id)
 }

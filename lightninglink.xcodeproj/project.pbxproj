@@ -26,6 +26,7 @@
 		4CCB0E2627C979F30026461C /* CodeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCB0E2227C979F30026461C /* CodeScanner.swift */; };
 		4CCB0E2727C979F30026461C /* ScannerCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCB0E2327C979F30026461C /* ScannerCoordinator.swift */; };
 		4CCB0E2827C979F30026461C /* ScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCB0E2427C979F30026461C /* ScannerViewController.swift */; };
+		4CCB0E2B27CA71CA0026461C /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCB0E2A27CA71CA0026461C /* SetupView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,6 +74,7 @@
 		4CCB0E2227C979F30026461C /* CodeScanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeScanner.swift; sourceTree = "<group>"; };
 		4CCB0E2327C979F30026461C /* ScannerCoordinator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScannerCoordinator.swift; sourceTree = "<group>"; };
 		4CCB0E2427C979F30026461C /* ScannerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScannerViewController.swift; sourceTree = "<group>"; };
+		4CCB0E2A27CA71CA0026461C /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,15 +131,14 @@
 		4C641D172788FF2F002A36C9 /* lightninglink */ = {
 			isa = PBXGroup;
 			children = (
+				4CCB0E2927CA71AA0026461C /* Views */,
 				4CCB0E1F27C979F30026461C /* CodeScanner */,
 				4C0359FE27AEEE8500FF92CE /* Info.plist */,
 				4C873FD427A6EF3F008C972C /* LNSocket.swift */,
 				4C641D182788FF2F002A36C9 /* lightninglinkApp.swift */,
-				4C641D1A2788FF2F002A36C9 /* ContentView.swift */,
 				4C641D1C2788FF30002A36C9 /* Assets.xcassets */,
 				4C641D1E2788FF30002A36C9 /* Preview Content */,
 				4C873FD627A6F1F5008C972C /* RPC.swift */,
-				4C0359FF27AEF90000FF92CE /* PayView.swift */,
 				4C035A0327AEFD2F00FF92CE /* Invoice.swift */,
 				4C8B289227B44EAF00DF3372 /* LNLink.swift */,
 			);
@@ -198,6 +199,16 @@
 				4CCB0E2427C979F30026461C /* ScannerViewController.swift */,
 			);
 			path = CodeScanner;
+			sourceTree = "<group>";
+		};
+		4CCB0E2927CA71AA0026461C /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				4C0359FF27AEF90000FF92CE /* PayView.swift */,
+				4C641D1A2788FF2F002A36C9 /* ContentView.swift */,
+				4CCB0E2A27CA71CA0026461C /* SetupView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -341,6 +352,7 @@
 				4CCB0E2827C979F30026461C /* ScannerViewController.swift in Sources */,
 				4C035A0427AEFD2F00FF92CE /* Invoice.swift in Sources */,
 				4C641D192788FF2F002A36C9 /* lightninglinkApp.swift in Sources */,
+				4CCB0E2B27CA71CA0026461C /* SetupView.swift in Sources */,
 				4C873FD727A6F1F5008C972C /* RPC.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
