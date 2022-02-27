@@ -25,12 +25,12 @@ func fetch_dashboard(lnlink: LNLink) -> Either<String, Dashboard> {
     let res = rpc_getinfo(ln: ln, token: lnlink.token)
     switch res {
     case .failure(let res_err):
-        return .left(res_err.decoded?.message ?? res_err.errorType.localizedDescription.debugDescription )
+        return .left(res_err.description )
     case .success(let info):
         let res2 = rpc_listfunds(ln: ln, token: lnlink.token)
         switch res2 {
         case .failure(let err):
-            return .left(err.decoded?.message ?? err.description)
+            return .left(err.description)
         case .success(let funds):
             return .right(Dashboard(info: info, funds: funds))
         }

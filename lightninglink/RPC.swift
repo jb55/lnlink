@@ -18,8 +18,12 @@ public struct ErrorWrapper<T: Decodable>: Decodable {
     public var error: T
 }
 
-public struct RpcErrorData: Decodable {
+public struct RpcErrorData: Decodable, CustomStringConvertible {
     public var message: String
+
+    public var description: String {
+        return message
+    }
 }
 
 public struct Output: Decodable {
@@ -94,10 +98,10 @@ public enum RequestErrorType: Error {
     case unknown(String)
 }
 
-public struct RequestError<E: Decodable>: Error, CustomStringConvertible {
+public struct RequestError<E: CustomStringConvertible & Decodable>: Error, CustomStringConvertible {
     public var response: HTTPURLResponse?
     public var respData: Data = Data()
-    public var decoded: E?
+    public var decoded: Either<String, E>?
     public var errorType: RequestErrorType
 
     init(errorType: RequestErrorType) {
@@ -111,6 +115,15 @@ public struct RequestError<E: Decodable>: Error, CustomStringConvertible {
     }
 
     public var description: String {
+        if let decoded = self.decoded {
+            switch decoded {
+            case .left(let err):
+                return err
+            case .right(let err):
+                return err.description
+            }
+        }
+
         let strData = String(decoding: respData, as: UTF8.self)
 
         guard let resp = response else {
@@ -277,10 +290,14 @@ public func rpc_listfunds(ln: LNSocket, token: String) -> RequestRes<ListFunds>
     return performRpc(ln: ln, operation: "listfunds", authToken: token, timeout_ms: default_timeout, params: params)
 }
 
-public func maybe_decode_error_json<T: Decodable>(_ dat: Data) -> T? {
+public func maybe_decode_error_json<T: Decodable>(_ dat: Data) -> Either<String, T>? {
     do {
-        return try JSONDecoder().decode(ErrorWrapper<T>.self, from: dat).error
+        return .right(try JSONDecoder().decode(ErrorWrapper<T>.self, from: dat).error)
     } catch {
-        return nil
+        do {
+            return .left(try JSONDecoder().decode(ErrorWrapper<String>.self, from: dat).error)
+        } catch {
+            return nil
+        }
     }
 }

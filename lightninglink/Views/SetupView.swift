@@ -60,7 +60,7 @@ struct SetupView: View {
                     self.error = "Connected but could not retrieve data. Commando plugin missing?"
                 case .auth_invalid(let str):
                     self.state = .initial
-                    self.error = "Auth issue: \(str)"
+                    self.error = str
                 case .success(let info, let funds):
                     save_lnlink(lnlink: lnlink)
                     self.lnlink = lnlink
@@ -95,8 +95,8 @@ struct SetupView: View {
             Spacer()
 
             Link("What the heck is LNLink?", destination: URL(string:"https://jb55.com/lnlink/qr")!)
-                .padding()
         }
+        .padding()
         .sheet(item: $active_sheet) { active_sheet in
             switch active_sheet {
             case .qr:
@@ -207,12 +207,7 @@ func validate_connection(lnlink: LNLink, completion: @escaping (SetupResult) -> 
             break
         }
 
-        guard let decoded = rpc_err.decoded else {
-            completion(.auth_invalid(rpc_err.description))
-            return
-        }
-
-        completion(.auth_invalid(decoded.message))
+        completion(.auth_invalid(rpc_err.description))
 
     case .success(let getinfo):
         let funds_res = rpc_listfunds(ln: ln, token: lnlink.token)
