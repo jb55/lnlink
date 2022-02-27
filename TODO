@@ -1,6 +1,6 @@
+(B) receive funds / create invoice view
 parse lnurl
 make lnurl request
 bolt12 support
-(B) receive funds / create invoice view
 create offer
-(A) auth setup screen
+pin or face unlock

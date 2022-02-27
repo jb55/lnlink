@@ -28,47 +28,74 @@ public enum SetupResult {
 
 public enum SetupViewState {
     case initial
-    case validating
+    case validating(LNLink)
     case validated
+}
+
+func initial_state() -> SetupViewState {
+    let lnlink = load_lnlink()
+    if lnlink != nil {
+        return .validating(lnlink!)
+    }
+
+    return .initial
 }
 
 struct SetupView: View {
     @State var active_sheet: ActiveAuthSheet? = nil
-    @State var state: SetupViewState = .initial
+    @State var state: SetupViewState = initial_state()
     @State var error: String? = nil
     @State var dashboard: Dashboard = .empty
     @State var lnlink: LNLink? = nil
 
     func perform_validation(_ lnlink: LNLink) {
-                            validate_connection(lnlink: lnlink) { res in
-                                switch res {
-                                case .connection_failed:
-                                    self.state = .initial
-                                    self.error = "Connection failed"
-                                case .plugin_missing:
-                                    self.state = .initial
-                                    self.error = "Connected but could not retrieve data, plugin missing?"
-                                case .auth_invalid(let str):
-                                    self.state = .initial
-                                    self.error = "Auth issue: \(str)"
-                                case .success(let info, let funds):
-                                    save_lnlink(lnlink: lnlink)
-                                    self.lnlink = lnlink
-                                    self.dashboard = Dashboard(info: info, funds: funds)
-                                    self.state = .validated
-                                    self.error = nil
-                                }
-                            }
+        DispatchQueue.main.async {
+            validate_connection(lnlink: lnlink) { res in
+                switch res {
+                case .connection_failed:
+                    self.state = .initial
+                    self.error = "Connection failed"
+                case .plugin_missing:
+                    self.state = .initial
+                    self.error = "Connected but could not retrieve data. Commando plugin missing?"
+                case .auth_invalid(let str):
+                    self.state = .initial
+                    self.error = "Auth issue: \(str)"
+                case .success(let info, let funds):
+                    save_lnlink(lnlink: lnlink)
+                    self.lnlink = lnlink
+                    self.dashboard = Dashboard(info: info, funds: funds)
+                    self.state = .validated
+                    self.error = nil
+                }
+            }
+        }
     }
 
     func setup_view() -> some View {
         VStack {
-            Button("Scan auth QR") {
+            Text("Connect")
+                .font(.headline)
+
+            Spacer()
+
+            Button("Scan LNLink QR Code") {
                 self.active_sheet = .qr
             }
+            .foregroundColor(Color.blue)
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(16)
+
             if self.error != nil {
-                Text("\(self.error!)")
+                Text("Error: \(self.error!)")
+                    .foregroundColor(Color.red)
             }
+
+            Spacer()
+
+            Link("What the heck is LNLink?", destination: URL(string:"https://jb55.com/lnlink/qr")!)
+                .padding()
         }
         .sheet(item: $active_sheet) { active_sheet in
             switch active_sheet {
@@ -84,8 +111,7 @@ struct SetupView: View {
                         case .left(let err):
                             self.error = err
                         case .right(let lnlink):
-                            self.state = .validating
-                            self.perform_validation(lnlink)
+                            self.state = .validating(lnlink)
                         }
 
                     case .failure(let scan_err):
@@ -97,8 +123,11 @@ struct SetupView: View {
 
     }
 
-    func validating_view() -> some View {
-        Text("Checking connection...")
+    func validating_view(lnlink: LNLink) -> some View {
+        Text("Connecting...")
+            .onAppear() {
+                self.perform_validation(lnlink)
+            }
     }
 
     var body: some View {
@@ -106,8 +135,8 @@ struct SetupView: View {
             switch self.state {
             case .initial:
                 setup_view()
-            case .validating:
-                validating_view()
+            case .validating(let lnlink):
+                validating_view(lnlink: lnlink)
             case .validated:
                 ContentView(dashboard: self.dashboard, lnlink: self.lnlink!)
             }

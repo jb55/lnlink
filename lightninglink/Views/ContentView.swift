@@ -70,6 +70,7 @@ struct ContentView: View {
     @State private var last_pay: Pay?
     @State private var dashboard: Dashboard
     @State private var funds: Funds
+    @State private var is_reset: Bool = false
 
     private var lnlink: LNLink
 
@@ -115,15 +116,33 @@ struct ContentView: View {
         self.has_alert = true
     }
 
-    var body: some View {
+    func main_content() -> some View {
         VStack {
-            Group {
+            VStack {
+            HStack {
+                VStack {
                 Text(self.dashboard.info.alias)
-                    .font(.largeTitle)
-                    .padding()
-                Text("\(self.dashboard.info.num_active_channels) active channels")
-                Text("\(self.dashboard.info.msatoshi_fees_collected / 1000) sats collected in fees")
+                    .font(.title)
                 }
+
+                Spacer()
+
+                Button("Reset") {
+                    reset_lnlink()
+                    self.is_reset = true
+                }
+            }
+
+            HStack {
+                Text("\(self.dashboard.info.msatoshi_fees_collected / 1000) sats earned")
+                    .font(.footnote)
+                    .foregroundColor(.gray)
+
+                Spacer()
+            }
+            }
+            .padding()
+
             Spacer()
             Text("\(format_last_pay())")
                 .foregroundColor(Color.red)
@@ -131,12 +150,18 @@ struct ContentView: View {
             Text("\(self.funds.channel_sats) sats")
                 .font(.title)
                 .padding()
-            Text("\(self.funds.onchain_sats) onchain")
+
+            if self.funds.onchain_sats != 0 {
+                Text("\(self.funds.onchain_sats) onchain")
+                    .foregroundColor(.gray)
+            }
+
             Spacer()
             HStack {
                 Spacer()
                 Button("Pay", action: check_pay)
                 .font(.title)
+                .buttonStyle(.bordered)
                 .padding()
             }
         }
@@ -187,6 +212,15 @@ struct ContentView: View {
             last_pay = payment.object as! Pay
             self.active_sheet = nil
             refresh_funds()
+        }
+
+    }
+
+    var body: some View {
+        if is_reset {
+            SetupView()
+        } else {
+            main_content()
         }
     }
 }

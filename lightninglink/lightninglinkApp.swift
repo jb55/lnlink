@@ -14,6 +14,7 @@ public struct Dashboard {
     public static var empty: Dashboard = Dashboard(info: .empty, funds: .empty)
 }
 
+
 func fetch_dashboard(lnlink: LNLink) -> Either<String, Dashboard> {
     let ln = LNSocket()
 
@@ -24,7 +25,7 @@ func fetch_dashboard(lnlink: LNLink) -> Either<String, Dashboard> {
     let res = rpc_getinfo(ln: ln, token: lnlink.token)
     switch res {
     case .failure(let res_err):
-        return .left(res_err.decoded?.message ?? res_err.description)
+        return .left(res_err.decoded?.message ?? res_err.errorType.localizedDescription.debugDescription )
     case .success(let info):
         let res2 = rpc_listfunds(ln: ln, token: lnlink.token)
         switch res2 {
@@ -44,30 +45,7 @@ struct lightninglinkApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if self.error != nil {
-                Text("Error: \(self.error!)")
-            } else {
-                if self.lnlink != nil {
-                    if self.dashboard != nil {
-                        ContentView(dashboard: self.dashboard!, lnlink: self.lnlink!)
-                    } else {
-                        VStack {
-                            Text("Connecting...")
-                                .onAppear() {
-                                    let res = fetch_dashboard(lnlink: self.lnlink!)
-                                    switch res {
-                                    case .left(let err):
-                                        self.error = err
-                                    case .right(let dash):
-                                        self.dashboard = dash
-                                    }
-                                }
-                        }
-                    }
-                } else {
-                    SetupView()
-                }
-                }
+            SetupView()
         }
     }
 }
@@ -97,6 +75,12 @@ func save_lnlink(lnlink: LNLink) {
     UserDefaults.standard.set(lnlink.token, forKey: "lnlink_token")
     UserDefaults.standard.set(lnlink.node_id, forKey: "lnlink_nodeid")
     UserDefaults.standard.set(lnlink.host, forKey: "lnlink_host")
+}
+
+func reset_lnlink() {
+    UserDefaults.standard.removeObject(forKey: "lnlink_token")
+    UserDefaults.standard.removeObject(forKey: "lnlink_nodeid")
+    UserDefaults.standard.removeObject(forKey: "lnlink_host")
 }
 
 func load_lnlink() -> LNLink? {
