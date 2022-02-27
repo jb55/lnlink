@@ -12,3 +12,11 @@ Building
 enter lnsocket submodule and type:
 
 $ make ios
+
+
+Configuring your c-lightning node
+---------------------------------
+
+Check out this guide for linking your c-lightning node
+
+https://jb55.com/lnlink/qr
