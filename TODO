@@ -3,6 +3,7 @@ parse lnurl
 make lnurl request
 bolt12 support
 create offer
-pin or face unlock
-encrypt token with secure enclave
-alert on reset
+subscriptions
+alert confirmation on reset @ux
+encrypt token with secure enclave @security
+deterministic nodeid for more secure tokens with id restrictions @security
