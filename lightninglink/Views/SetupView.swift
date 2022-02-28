@@ -49,7 +49,7 @@ struct SetupView: View {
     @State var lnlink: LNLink? = nil
 
     func perform_validation(_ lnlink: LNLink) {
-        DispatchQueue.main.async {
+        DispatchQueue.global(qos: .background).async {
             validate_connection(lnlink: lnlink) { res in
                 switch res {
                 case .connection_failed:
