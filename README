@@ -5,6 +5,9 @@ LNLink
 An iOS app for communicating with your clightning node over the lightning
 network
 
+LNLink is powered by lnsocket, a C library I created to connect to the lightning network:
+
+http://git.jb55.com/lnsocket
 
 Building
 --------
