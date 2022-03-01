@@ -170,9 +170,12 @@ func parse_auth_qr(_ qr: String) -> Either<String, LNLink> {
         return .left("No nodeid found in auth qr")
     }
 
-    guard let host = url.host else {
+    guard var host = url.host else {
         return .left("No hostname found in auth qr")
     }
+
+    let port = url.port ?? 9735
+    host = host + ":\(port)"
 
     guard let qs = URLComponents(string: auth_qr) else {
         return .left("Invalid url querystring")
