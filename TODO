@@ -7,3 +7,4 @@ subscriptions
 alert confirmation on reset @ux
 encrypt token with secure enclave @security
 deterministic nodeid for more secure tokens with id restrictions @security
+(B) decodepay when paying

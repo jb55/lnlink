@@ -49,11 +49,14 @@ struct Funds {
         var onchain_sats: Int64 = 0
         var channel_sats: Int64 = 0
 
-        for channel in fs.channels {
+        let channels = fs.channels ?? []
+        let outputs = fs.outputs ?? []
+
+        for channel in channels {
             channel_sats += channel.channel_sat
         }
 
-        for output in fs.outputs {
+        for output in outputs {
             onchain_sats += output.value
         }
 

@@ -216,7 +216,7 @@ func validate_connection(lnlink: LNLink, completion: @escaping (SetupResult) -> 
         let funds_res = rpc_listfunds(ln: ln, token: lnlink.token)
 
         switch funds_res {
-        case .failure:
+        case .failure(let err):
             completion(.success(getinfo, .empty))
         case .success(let listfunds):
             completion(.success(getinfo, listfunds))

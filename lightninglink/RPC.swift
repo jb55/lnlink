@@ -42,7 +42,6 @@ public struct Channel: Decodable {
     public var peer_id: String
     public var connected: Bool
     public var state: String
-    public var short_channel_id: String
     public var channel_sat: Int64
     public var channel_total_sat: Int64
     public var funding_txid: String
@@ -50,8 +49,8 @@ public struct Channel: Decodable {
 }
 
 public struct ListFunds: Decodable {
-    public var outputs: [Output]
-    public var channels: [Channel]
+    public var outputs: [Output]?
+    public var channels: [Channel]?
 
     public static var empty = ListFunds(outputs: [], channels: [])
 }
