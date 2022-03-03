@@ -27,25 +27,23 @@ public struct RpcErrorData: Decodable, CustomStringConvertible {
 }
 
 public struct Output: Decodable {
-    public var txid: String
-    public var output: Int
+    //public var txid: String
+    //public var output: Int
     public var value: Int64
-    public var amount_msat: String
-    public var scriptpubkey: String
-    public var address: String
-    public var status: String
-    public var blockheight: Int
-    public var reserved: Bool
+    //public var amount_msat: String
+    //public var scriptpubkey: String
+    //public var address: String
+    //public var status: String
+    //public var blockheight: Int
+    //public var reserved: Bool
 }
 
 public struct Channel: Decodable {
-    public var peer_id: String
-    public var connected: Bool
-    public var state: String
+    //public var peer_id: String
+    //public var connected: Bool
+    //public var state: String
     public var channel_sat: Int64
     public var channel_total_sat: Int64
-    public var funding_txid: String
-    public var funding_output: Int
 }
 
 public struct ListFunds: Decodable {
