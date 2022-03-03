@@ -267,11 +267,11 @@ func commando_read_all(ln: LNSocket, timeout_ms: Int32 = 2000) -> RequestRes<Dat
             return .failure(RequestError(errorType: .recvFailed))
         }
 
-        all_data.append(data[8...])
-
         if msgtype == COMMANDO_REPLY_TERM {
+            all_data.append(data[8...])
             break
         } else if msgtype == COMMANDO_REPLY_CONTINUES {
+            all_data.append(data[8...])
             continue
         } else {
             //return .failure(RequestError(errorType: .badCommandoMsgType(Int(msgtype))))
