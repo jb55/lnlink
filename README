@@ -7,7 +7,7 @@ network
 
 Get the TestFlight:
 
-	https://jb55.com/lnlink
+	http://lnlink.app
 
 LNLink is powered by lnsocket, a C library I created to connect to the lightning network:
 

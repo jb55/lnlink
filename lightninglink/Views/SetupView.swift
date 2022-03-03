@@ -94,7 +94,7 @@ struct SetupView: View {
 
             Spacer()
 
-            Link("What the heck is LNLink?", destination: URL(string:"https://jb55.com/lnlink/qr")!)
+            Link("What the heck is LNLink?", destination: URL(string:"http://lnlink.app/qr")!)
         }
         .padding()
         .sheet(item: $active_sheet) { active_sheet in
