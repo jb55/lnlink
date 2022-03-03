@@ -22,7 +22,7 @@ enum ActiveAlert: Identifiable {
         }
     }
 
-    case pay(InvoiceAmount, String)
+    case pay(DecodeType, String)
 }
 
 public enum ActiveSheet: Identifiable {
@@ -36,7 +36,7 @@ public enum ActiveSheet: Identifiable {
     }
 
     case qr
-    case pay(InvoiceAmount, String)
+    case pay(DecodeType, String)
 }
 
 struct Funds {
@@ -194,7 +194,7 @@ struct ContentView: View {
                             let index = code.index(code.startIndex, offsetBy: 10)
                             invstr = String(code[index...])
                         }
-                        let m_parsed = parseInvoiceAmount(invstr)
+                        let m_parsed = parseInvoiceString(invstr)
                         guard let parsed = m_parsed else {
                             return
                         }
@@ -207,8 +207,8 @@ struct ContentView: View {
 
                 }
 
-            case .pay(let amt, let raw):
-                PayView(invoice_str: raw, amount: amt, lnlink: self.lnlink)
+            case .pay(let decode_type, let raw):
+                PayView(invoice_str: raw, decode_type: decode_type, lnlink: self.lnlink)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .sentPayment)) { payment in
@@ -239,12 +239,12 @@ struct ContentView_Previews: PreviewProvider {
  */
 
 
-func get_clipboard_invoice() -> (InvoiceAmount, String)? {
+func get_clipboard_invoice() -> (DecodeType, String)? {
     guard let inv = UIPasteboard.general.string else {
         return nil
     }
 
-    guard let amt = parseInvoiceAmount(inv) else {
+    guard let amt = parseInvoiceString(inv) else {
         return nil
     }
 

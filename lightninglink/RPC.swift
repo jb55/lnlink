@@ -46,6 +46,25 @@ public struct Channel: Decodable {
     public var channel_total_sat: Int64
 }
 
+public struct Decode: Decodable {
+    public var type: String
+    public var currency: String?
+    public var valid: Bool
+    public var created_at: Int64?
+    public var expiry: Int64?
+    public var payee: String?
+    public var msatoshi: Int64?
+    public var quantity_min: Int?
+    public var description: String?
+    public var node_id: String?
+    public var amount_msat: String?
+    public var vendor: String?
+}
+
+public struct FetchInvoice: Decodable {
+    public var invoice: String
+}
+
 public struct ListFunds: Decodable {
     public var outputs: [Output]?
     public var channels: [Channel]?
@@ -285,6 +304,30 @@ public func rpc_listfunds(ln: LNSocket, token: String) -> RequestRes<ListFunds>
 {
     let params: Array<String> = []
     return performRpc(ln: ln, operation: "listfunds", authToken: token, timeout_ms: default_timeout, params: params)
+}
+
+public func rpc_decode(ln: LNSocket, token: String, inv: String) -> RequestRes<Decode>
+{
+    let params = [ inv ];
+    return performRpc(ln: ln, operation: "decode", authToken: token, timeout_ms: 1000, params: params)
+}
+
+public func rpc_fetchinvoice(ln: LNSocket, token: String, req: FetchInvoiceReq) -> RequestRes<FetchInvoice>
+{
+    var params: [String: String] = [ "offer": req.offer ]
+
+    switch req.amount {
+    case .amount(let amt):
+        params["msatoshi"] = "\(amt)msat"
+    case .any:
+        break
+    }
+
+    if req.quantity != nil {
+        params["quantity"] = "\(req.quantity!)"
+    }
+
+    return performRpc(ln: ln, operation: "fetchinvoice", authToken: token, timeout_ms: 10000, params: params)
 }
 
 public func maybe_decode_error_json<T: Decodable>(_ dat: Data) -> Either<String, T>? {

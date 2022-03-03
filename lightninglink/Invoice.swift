@@ -8,15 +8,24 @@
 import Foundation
 
 
+public enum DecodeType {
+    case offer
+    case invoice(InvoiceAmount)
+}
+
 public enum InvoiceAmount {
     case amount(Int64)
     case any
 }
 
 // this is just a quick stopgap before we have full invoice parsing
-public func parseInvoiceAmount(_ invoice: String) -> InvoiceAmount?
+public func parseInvoiceString(_ invoice: String) -> DecodeType?
 {
     let inv = invoice.lowercased()
+
+    if inv.starts(with: "lno1") {
+        return .offer
+    }
 
     if !inv.starts(with: "lnbc") {
         return nil
@@ -43,7 +52,7 @@ public func parseInvoiceAmount(_ invoice: String) -> InvoiceAmount?
             num = String(inv[start_ind..<end_ind])
 
             if sep != "1" {
-                return .any
+                return .invoice(.any)
             }
 
             break
@@ -59,10 +68,10 @@ public func parseInvoiceAmount(_ invoice: String) -> InvoiceAmount?
     }
 
     switch scale {
-    case "m": return .amount(Int64(n * 100000000));
-    case "u": return .amount(Int64(n * 100000));
-    case "n": return .amount(Int64(n * 100));
-    case "p": return .amount(Int64(n * 1));
+    case "m": return .invoice(.amount(Int64(n * 100000000)));
+    case "u": return .invoice(.amount(Int64(n * 100000)));
+    case "n": return .invoice(.amount(Int64(n * 100)));
+    case "p": return .invoice(.amount(Int64(n * 1)));
     default: return nil
     }
 }

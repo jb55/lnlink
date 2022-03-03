@@ -217,6 +217,7 @@ func validate_connection(lnlink: LNLink, completion: @escaping (SetupResult) -> 
 
         switch funds_res {
         case .failure(let err):
+            print(err)
             completion(.success(getinfo, .empty))
         case .success(let listfunds):
             completion(.success(getinfo, listfunds))
