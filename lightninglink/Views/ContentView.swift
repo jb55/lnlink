@@ -194,6 +194,7 @@ struct ContentView: View {
                             let index = code.index(code.startIndex, offsetBy: 10)
                             invstr = String(code[index...])
                         }
+                        invstr = invstr.trimmingCharacters(in: .whitespacesAndNewlines)
                         let m_parsed = parseInvoiceString(invstr)
                         guard let parsed = m_parsed else {
                             return

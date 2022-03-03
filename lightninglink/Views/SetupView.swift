@@ -162,6 +162,9 @@ func parse_auth_qr(_ qr: String) -> Either<String, LNLink> {
         auth_qr = qr.replacingOccurrences(of: "lnlink:", with: "lnlink://")
     }
 
+    // some qrcodes are weird like this
+    auth_qr = auth_qr.trimmingCharacters(in: .whitespacesAndNewlines)
+
     guard let url = URL(string: auth_qr) else {
         return .left("Invalid url")
     }
