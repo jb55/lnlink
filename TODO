@@ -1,10 +1,10 @@
-(A) receive funds / create invoice view
+(B) receive funds / create invoice view
 parse lnurl
 make lnurl request
-bolt12 support
 create offer
 subscriptions
 alert confirmation on reset @ux
 encrypt token with secure enclave @security
 deterministic nodeid for more secure tokens with id restrictions @security
-(B) decodepay when paying
+(A) custom amount input support
+bolt12 invoice request
