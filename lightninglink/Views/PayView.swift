@@ -29,7 +29,6 @@ public enum PayState {
     case initial
     case decoding(LNSocket?, String)
     case decoded(DecodeType)
-    case fetch_invoice(LNSocket, FetchInvoiceReq)
     case ready(ReadyInvoice)
     case offer_input(ReadyInvoice, Decode)
 }
@@ -312,8 +311,7 @@ struct PayView: View {
 
         case .initial: fallthrough
         case .decoding: fallthrough
-        case .decoded: fallthrough
-        case .fetch_invoice:
+        case .decoded:
             self.error = "Invalid state: \(self.state)"
         }
     }
@@ -339,10 +337,6 @@ struct PayView: View {
             case .decoding(let ln, let inv):
                 DispatchQueue.global(qos: .background).async {
                     self.handle_decode(ln, inv: inv)
-                }
-            case .fetch_invoice(let ln, let req):
-                DispatchQueue.global(qos: .background).async {
-                    self.handle_fetch_invoice(ln: ln, req: req)
                 }
             case .decoded:
                 break
@@ -511,7 +505,6 @@ func is_ready(_ state: PayState) -> ReadyInvoice? {
         return ready_invoice
     case .offer_input(let ready_invoice, _):
         return ready_invoice
-    case .fetch_invoice: fallthrough
     case .initial: fallthrough
     case .decoding: fallthrough
     case .decoded:
@@ -563,16 +556,6 @@ func handle_bolt12_offer(ln: LNSocket, decoded: Decode, inv: String) -> Either<S
 }
 
 
-func confirm_offer(ln: LNSocket, bolt12: String, decoded: Decode, pay_amt: PayAmount) -> Either<String, PayState> {
-    let req = fetchinvoice_req_from_offer(offer: decoded, offer_str: bolt12, pay_amt: pay_amt)
-    switch req {
-    case .left(let err):
-        return .left(err)
-    case .right(let req):
-        return .right(.fetch_invoice(ln, req))
-    }
-}
-
 func should_show_confirm(_ state: PayState) -> Bool {
     switch state {
     case .ready: fallthrough
@@ -581,7 +564,6 @@ func should_show_confirm(_ state: PayState) -> Bool {
 
     case .decoded: fallthrough
     case .initial: fallthrough
-    case .fetch_invoice: fallthrough
     case .decoding:
         return false
     }
