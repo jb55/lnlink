@@ -132,24 +132,7 @@ struct PayView: View {
 
                 Spacer()
 
-                if ready_invoice != nil {
-
-                    Button("Confirm") {
-                        let res = confirm_payment(bolt11: ready_invoice!.invoice, lnlink: self.lnlink)
-
-                        switch res {
-                        case .left(let err):
-                            self.error = "Error: \(err)"
-
-                        case .right(let pay):
-                            print(pay)
-                            self.dismiss()
-                            NotificationCenter.default.post(name: .sentPayment, object: pay)
-                        }
-                    }
-                    .foregroundColor(Color.green)
-                    .font(.title)
-                    }
+                confirm_button(ready_invoice)
             }
         }
         .onAppear() {
@@ -158,6 +141,28 @@ struct PayView: View {
         .padding()
         .onReceive(self.expiry_timer) { _ in
             update_expiry_percent()
+        }
+    }
+
+    func confirm_button(_ ready_invoice: ReadyInvoice?) -> some View {
+        Group {
+            if ready_invoice != nil {
+                Button("Confirm") {
+                    let res = confirm_payment(bolt11: ready_invoice!.invoice, lnlink: self.lnlink)
+
+                    switch res {
+                    case .left(let err):
+                        self.error = "Error: \(err)"
+
+                    case .right(let pay):
+                        print(pay)
+                        self.dismiss()
+                        NotificationCenter.default.post(name: .sentPayment, object: pay)
+                    }
+                }
+                .foregroundColor(Color.green)
+                .font(.title)
+            }
         }
     }
 
