@@ -135,10 +135,10 @@ struct PayView: View {
                 confirm_button(ready_invoice)
             }
         }
+        .padding()
         .onAppear() {
             handle_state_change()
         }
-        .padding()
         .onReceive(self.expiry_timer) { _ in
             update_expiry_percent()
         }
