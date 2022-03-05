@@ -8,6 +8,11 @@
 import SwiftUI
 import Combine
 
+public struct ReadyInvoice {
+    let invoice: String
+    let amount: InvoiceAmount
+}
+
 public struct FetchInvoiceReq {
     let offer: String
     let amount: InvoiceAmount
@@ -19,7 +24,7 @@ public enum PayState {
     case decoding(LNSocket?, String)
     case decoded(DecodeType)
     case fetch_invoice(LNSocket, FetchInvoiceReq)
-    case ready(InvoiceAmount, String)
+    case ready(ReadyInvoice)
 }
 
 struct PayView: View {
@@ -110,9 +115,9 @@ struct PayView: View {
             }
             Spacer()
 
-            let inv_tup = is_ready(state)
-            if inv_tup != nil {
-                amount_view_inv(inv_tup!.0)
+            let ready_invoice = is_ready(state)
+            if ready_invoice != nil {
+                amount_view_inv(ready_invoice!.amount)
             }
 
             Text("\(self.error ?? "")")
@@ -127,9 +132,10 @@ struct PayView: View {
 
                 Spacer()
 
-                if inv_tup != nil {
+                if ready_invoice != nil {
+
                     Button("Confirm") {
-                        let res = confirm_payment(bolt11: inv_tup!.1, lnlink: self.lnlink)
+                        let res = confirm_payment(bolt11: ready_invoice!.invoice, lnlink: self.lnlink)
 
                         switch res {
                         case .left(let err):
@@ -222,7 +228,7 @@ struct PayView: View {
                     amount = .amount(amt)
                 }
 
-                self.state = .ready(amount, inv)
+                self.state = .ready(ReadyInvoice(invoice: inv, amount: amount))
                 self.invoice = decoded
                 update_expiry_percent()
             } else {
@@ -329,10 +335,10 @@ func amount_view(_ state: PayState) -> some View {
     }
 }
 
-func is_ready(_ state: PayState) -> (InvoiceAmount, String)? {
+func is_ready(_ state: PayState) -> ReadyInvoice? {
     switch state {
-    case .ready(let inv_amount, let inv):
-        return (inv_amount, inv)
+    case .ready(let ready_invoice):
+        return ready_invoice
     case .fetch_invoice: fallthrough
     case .initial: fallthrough
     case .decoding: fallthrough
