@@ -46,7 +46,8 @@ struct PayView: View {
     @State var invoice: Decode?
     @State var error: String?
     @State var expiry_percent: Double?
-    @State var custom_amount: String = ""
+    @State var custom_amount_input: String = ""
+    @State var custom_amount_msats: Int64 = 0
 
     @Environment(\.presentationMode) var presentationMode
 
@@ -167,7 +168,60 @@ struct PayView: View {
     func handle_custom_receive(_ new_val: String) {
         let filtered = new_val.filter { "0123456789".contains($0) }
         if filtered != new_val {
-            self.custom_amount = filtered
+            self.custom_amount_input = filtered
+            let msats = (Int64(filtered) ?? 0) * 1000
+            self.custom_amount_msats = msats
+        }
+    }
+
+    func tip_percent(_ percent: Double) {
+        if percent == 0 {
+            self.custom_amount_msats = 0
+            return
+        }
+
+        guard let invoice = self.invoice else {
+            return
+        }
+        guard let amount_msat_str = invoice.amount_msat else {
+            return
+        }
+        guard let amount_msat = parse_msat(amount_msat_str) else {
+            return
+        }
+
+        self.custom_amount_msats = Int64((Double(amount_msat) * percent))
+    }
+
+    func tip_view() -> some View {
+        Group {
+            Text("Tip?")
+            HStack {
+                Button("None") {
+                    tip_percent(0)
+                }
+                .padding()
+
+                Button("10%") {
+                    tip_percent(0.1)
+                }
+                .padding()
+
+                Button("15%") {
+                    tip_percent(0.15)
+                }
+                .padding()
+
+                Button("20%") {
+                    tip_percent(0.2)
+                }
+                .padding()
+            }
+            .padding()
+
+            let tip_str = self.custom_amount_msats == 0 ? "No tip" : "\(render_amount_msats(self.custom_amount_msats)) tip"
+
+            Text(tip_str)
         }
     }
 
@@ -178,17 +232,14 @@ struct PayView: View {
             case .min(let min_amt):
                 Text("\(render_amount_msats(min_amt))")
                     .font(.title)
-                Text("Tip?")
-                TextField("Amount", text: $custom_amount)
-                    .keyboardType(.numberPad)
-                    .onReceive(Just(self.custom_amount)) {
-                        handle_custom_receive($0)
-                    }
+                Spacer()
+                tip_view()
 
             case .any:
-                TextField("Amount", text: $custom_amount)
+                TextField("Amount", text: $custom_amount_input)
+                    .font(.title)
                     .keyboardType(.numberPad)
-                    .onReceive(Just(self.custom_amount)) {
+                    .onReceive(Just(self.custom_amount_input)) {
                         handle_custom_receive($0)
                     }
             case .amount(let amt):
@@ -212,67 +263,52 @@ struct PayView: View {
         }
     }
 
-    func get_pay_amount(_ amt: InvoiceAmount) -> Either<String, PayAmount> {
-        let m_pay_amount = Int64(self.custom_amount)
-
+    func get_pay_amount(_ amt: InvoiceAmount) -> PayAmount {
         switch amt {
         case .min(let min_amt):
-            // TODO: get tip from tip percent buttons
-            let tip = m_pay_amount ?? 0
-            return .right(PayAmount(tip: tip, amount: min_amt))
+            let tip = self.custom_amount_msats
+            return PayAmount(tip: tip, amount: min_amt)
         case .any:
-            guard let custom_amount = Int64(self.custom_amount) else {
-                return .left("Invalid amount: '\(self.custom_amount)'")
-            }
-            return .right(PayAmount(tip: 0, amount: custom_amount))
+            return PayAmount(tip: 0, amount: custom_amount_msats)
         case .amount(let amt):
-            return .right(PayAmount(tip: 0, amount: amt))
+            return PayAmount(tip: 0, amount: amt)
         }
     }
 
     func handle_confirm(ln mln: LNSocket?) {
         switch self.state {
         case .offer_input(let inv, let decoded):
-            switch get_pay_amount(inv.amount) {
+            let pay_amt = get_pay_amount(inv.amount)
+            let req = fetchinvoice_req_from_offer(
+                offer: decoded,
+                offer_str: inv.invoice,
+                pay_amt: pay_amt)
+            switch req {
             case .left(let err):
                 self.error = err
-                return
-            case .right(let pay_amt):
-                let req = fetchinvoice_req_from_offer(
-                    offer: decoded,
-                    offer_str: inv.invoice,
-                    pay_amt: pay_amt)
-                switch req {
-                case .left(let err):
-                    self.error = err
-                case .right(let req):
-                    let token = self.lnlink.token
-                    DispatchQueue.global(qos: .background).async {
-                        let ln = mln ?? LNSocket()
-                        if mln == nil {
-                            guard ln.connect_and_init(node_id: self.lnlink.node_id, host: self.lnlink.host) else {
-                                self.error = "Connection failed when fetching invoice"
-                                return
-                            }
+            case .right(let req):
+                let token = self.lnlink.token
+                DispatchQueue.global(qos: .background).async {
+                    let ln = mln ?? LNSocket()
+                    if mln == nil {
+                        guard ln.connect_and_init(node_id: self.lnlink.node_id, host: self.lnlink.host) else {
+                            self.error = "Connection failed when fetching invoice"
+                            return
                         }
-                        switch rpc_fetchinvoice(ln: ln, token: token, req: req) {
-                        case .failure(let err):
-                            self.error = err.description
-                        case .success(let fetch_invoice):
-                            confirm_pay(ln: ln, inv: fetch_invoice.invoice, pay_amt: nil)
-                        }
+                    }
+                    switch rpc_fetchinvoice(ln: ln, token: token, req: req) {
+                    case .failure(let err):
+                        self.error = err.description
+                    case .success(let fetch_invoice):
+                        confirm_pay(ln: ln, inv: fetch_invoice.invoice, pay_amt: nil)
                     }
                 }
             }
 
 
         case .ready(let ready_invoice):
-            switch get_pay_amount(ready_invoice.amount) {
-            case .left(let err):
-                self.error = err
-            case .right(let pay_amt):
-                confirm_pay(ln: mln, inv: ready_invoice.invoice, pay_amt: pay_amt)
-            }
+            let pay_amt = get_pay_amount(ready_invoice.amount)
+            confirm_pay(ln: mln, inv: ready_invoice.invoice, pay_amt: pay_amt)
 
         case .initial: fallthrough
         case .decoding: fallthrough

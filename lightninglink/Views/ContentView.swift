@@ -98,13 +98,8 @@ struct ContentView: View {
             return ""
         }
 
-        if (pay.msatoshi >= 1000) {
-            let sats = pay.msatoshi / 1000
-            let fee = (pay.msatoshi_sent - pay.msatoshi) / 1000
-            return "-\(sats) sats (\(fee) sats fee)"
-        }
-
-        return "-\(pay.msatoshi) msats (\(pay.msatoshi_sent) msats sent)"
+        let fee = pay.msatoshi_sent - pay.msatoshi
+        return "-\(render_amount_msats(pay.msatoshi)) (\(render_amount_msats(fee)) fee)"
     }
 
     func check_pay() {
