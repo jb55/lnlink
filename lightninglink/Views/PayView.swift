@@ -155,13 +155,17 @@ struct PayView: View {
         }
     }
 
+    func switch_state(_ state: PayState) {
+        self.state = state
+        handle_state_change()
+    }
+
     func handle_state_change() {
             switch self.state {
             case .ready:
                 break
             case .initial:
-                self.state = .decoding(nil, self.init_invoice_str)
-                handle_state_change()
+                switch_state(.decoding(nil, self.init_invoice_str))
             case .decoding(let ln, let inv):
                 DispatchQueue.global(qos: .background).async {
                     self.handle_decode(ln, inv: inv)
@@ -181,8 +185,7 @@ struct PayView: View {
         case .failure(let err):
             self.error = err.description
         case .success(let fetch_invoice):
-            self.state = .decoding(ln, fetch_invoice.invoice)
-            handle_state_change()
+            switch_state(.decoding(ln, fetch_invoice.invoice))
         }
     }
 
@@ -206,8 +209,7 @@ struct PayView: View {
                 case .left(let err):
                     self.error = err
                 case .right(let req):
-                    self.state = .fetch_invoice(ln, req)
-                    handle_state_change()
+                    switch_state(.fetch_invoice(ln, req))
                 }
             } else if decoded.type == "bolt11 invoice" || decoded.type == "bolt12 invoice" {
                 var amount: InvoiceAmount = .any
