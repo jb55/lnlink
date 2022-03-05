@@ -13,8 +13,14 @@ public struct ReadyInvoice {
     let amount: InvoiceAmount
 }
 
+public struct PayAmount {
+    let tip: Int64?
+    let amount: Int64
+}
+
 public struct FetchInvoiceReq {
     let offer: String
+    let pay_amt: PayAmount?
     let amount: InvoiceAmount
     let quantity: Int?
 }
@@ -25,6 +31,7 @@ public enum PayState {
     case decoded(DecodeType)
     case fetch_invoice(LNSocket, FetchInvoiceReq)
     case ready(ReadyInvoice)
+    case offer_input(ReadyInvoice, Decode)
 }
 
 struct PayView: View {
@@ -39,6 +46,7 @@ struct PayView: View {
     @State var invoice: Decode?
     @State var error: String?
     @State var expiry_percent: Double?
+    @State var custom_amount: String = ""
 
     @Environment(\.presentationMode) var presentationMode
 
@@ -113,8 +121,10 @@ struct PayView: View {
                         .foregroundColor(.gray)
                 }
             }
+
             Spacer()
 
+            // Middle area
             let ready_invoice = is_ready(state)
             if ready_invoice != nil {
                 amount_view_inv(ready_invoice!.amount)
@@ -122,7 +132,10 @@ struct PayView: View {
 
             Text("\(self.error ?? "")")
                 .foregroundColor(Color.red)
+
             Spacer()
+
+            // Bottom area
             HStack {
                 Button("Cancel") {
                     self.dismiss()
@@ -132,7 +145,14 @@ struct PayView: View {
 
                 Spacer()
 
-                confirm_button(ready_invoice)
+               if should_show_confirm(self.state) {
+                    Button("Confirm") {
+                        handle_confirm(ln: nil)
+                    }
+                    .foregroundColor(Color.green)
+                    .font(.title)
+               }
+
             }
         }
         .padding()
@@ -144,25 +164,126 @@ struct PayView: View {
         }
     }
 
-    func confirm_button(_ ready_invoice: ReadyInvoice?) -> some View {
+    func handle_custom_receive(_ new_val: String) {
+        let filtered = new_val.filter { "0123456789".contains($0) }
+        if filtered != new_val {
+            self.custom_amount = filtered
+        }
+    }
+
+    func amount_view_inv(_ amt: InvoiceAmount) -> some View {
         Group {
-            if ready_invoice != nil {
-                Button("Confirm") {
-                    let res = confirm_payment(bolt11: ready_invoice!.invoice, lnlink: self.lnlink)
+            Text("Pay")
+            switch amt {
+            case .min(let min_amt):
+                Text("\(render_amount_msats(min_amt))")
+                    .font(.title)
+                Text("Tip?")
+                TextField("Amount", text: $custom_amount)
+                    .keyboardType(.numberPad)
+                    .onReceive(Just(self.custom_amount)) {
+                        handle_custom_receive($0)
+                    }
 
-                    switch res {
-                    case .left(let err):
-                        self.error = "Error: \(err)"
+            case .any:
+                TextField("Amount", text: $custom_amount)
+                    .keyboardType(.numberPad)
+                    .onReceive(Just(self.custom_amount)) {
+                        handle_custom_receive($0)
+                    }
+            case .amount(let amt):
+                Text("\(render_amount_msats(amt))")
+                    .font(.title)
+            }
+        }
+    }
 
-                    case .right(let pay):
-                        print(pay)
-                        self.dismiss()
-                        NotificationCenter.default.post(name: .sentPayment, object: pay)
+    func confirm_pay(ln: LNSocket?, inv: String, pay_amt: PayAmount?) {
+        let res = confirm_payment(ln: ln, lnlink: self.lnlink, bolt11: inv, pay_amt: pay_amt)
+
+        switch res {
+        case .left(let err):
+            self.error = "Error: \(err)"
+
+        case .right(let pay):
+            print(pay)
+            self.dismiss()
+            NotificationCenter.default.post(name: .sentPayment, object: pay)
+        }
+    }
+
+    func get_pay_amount(_ amt: InvoiceAmount) -> Either<String, PayAmount> {
+        let m_pay_amount = Int64(self.custom_amount)
+
+        switch amt {
+        case .min(let min_amt):
+            // TODO: get tip from tip percent buttons
+            let tip = m_pay_amount ?? 0
+            return .right(PayAmount(tip: tip, amount: min_amt))
+        case .any:
+            guard let custom_amount = Int64(self.custom_amount) else {
+                return .left("Invalid amount: '\(self.custom_amount)'")
+            }
+            return .right(PayAmount(tip: 0, amount: custom_amount))
+        case .amount(let amt):
+            return .right(PayAmount(tip: 0, amount: amt))
+        }
+    }
+
+    func handle_confirm(ln mln: LNSocket?) {
+        switch self.state {
+        case .offer_input(let inv, let decoded):
+            switch get_pay_amount(inv.amount) {
+            case .left(let err):
+                self.error = err
+                return
+            case .right(let pay_amt):
+                let req = fetchinvoice_req_from_offer(
+                    offer: decoded,
+                    offer_str: inv.invoice,
+                    pay_amt: pay_amt)
+                switch req {
+                case .left(let err):
+                    self.error = err
+                case .right(let req):
+                    let token = self.lnlink.token
+                    DispatchQueue.global(qos: .background).async {
+                        let ln = mln ?? LNSocket()
+                        if mln == nil {
+                            guard ln.connect_and_init(node_id: self.lnlink.node_id, host: self.lnlink.host) else {
+                                self.error = "Connection failed when fetching invoice"
+                                return
+                            }
+                        }
+                        switch rpc_fetchinvoice(ln: ln, token: token, req: req) {
+                        case .failure(let err):
+                            self.error = err.description
+                        case .success(let fetch_invoice):
+                            confirm_pay(ln: ln, inv: fetch_invoice.invoice, pay_amt: nil)
+                        }
                     }
                 }
-                .foregroundColor(Color.green)
-                .font(.title)
             }
+
+
+        case .ready(let ready_invoice):
+            switch get_pay_amount(ready_invoice.amount) {
+            case .left(let err):
+                self.error = err
+            case .right(let pay_amt):
+                confirm_pay(ln: mln, inv: ready_invoice.invoice, pay_amt: pay_amt)
+            }
+
+        case .initial: fallthrough
+        case .decoding: fallthrough
+        case .decoded: fallthrough
+        case .fetch_invoice:
+            self.error = "Invalid state: \(self.state)"
+        }
+    }
+
+    func confirm_button() -> some View {
+        Group {
         }
     }
 
@@ -174,6 +295,8 @@ struct PayView: View {
     func handle_state_change() {
             switch self.state {
             case .ready:
+                break
+            case .offer_input:
                 break
             case .initial:
                 switch_state(.decoding(nil, self.init_invoice_str))
@@ -196,7 +319,17 @@ struct PayView: View {
         case .failure(let err):
             self.error = err.description
         case .success(let fetch_invoice):
-            switch_state(.decoding(ln, fetch_invoice.invoice))
+            confirm_pay(ln: ln, inv: fetch_invoice.invoice, pay_amt: req.pay_amt)
+        }
+    }
+
+    func handle_offer(ln: LNSocket, decoded: Decode, inv: String) {
+        switch handle_bolt12_offer(ln: ln, decoded: decoded, inv: inv) {
+        case .right(let state):
+            self.invoice = decoded
+            switch_state(state)
+        case .left(let err):
+            self.error = err
         }
     }
 
@@ -213,15 +346,8 @@ struct PayView: View {
             self.error = fail.description
         case .success(let decoded):
             if decoded.type == "bolt12 offer" {
-                // TODO: handle custom amounts for offers
-                let amt: Int64? = 10000
-                let req = fetchinvoice_req_from_offer(offer: decoded, offer_str: inv, amount: amt)
-                switch req {
-                case .left(let err):
-                    self.error = err
-                case .right(let req):
-                    switch_state(.fetch_invoice(ln, req))
-                }
+                self.handle_offer(ln: ln, decoded: decoded, inv: inv)
+
             } else if decoded.type == "bolt11 invoice" || decoded.type == "bolt12 invoice" {
                 var amount: InvoiceAmount = .any
                 if decoded.amount_msat != nil {
@@ -282,7 +408,7 @@ struct PayView: View {
     }
 }
 
-func fetchinvoice_req_from_offer(offer: Decode, offer_str: String, amount: Int64?) -> Either<String, FetchInvoiceReq> {
+func fetchinvoice_req_from_offer(offer: Decode, offer_str: String, pay_amt: PayAmount) -> Either<String, FetchInvoiceReq> {
 
     var qty: Int? = nil
     if offer.quantity_min != nil {
@@ -290,13 +416,10 @@ func fetchinvoice_req_from_offer(offer: Decode, offer_str: String, amount: Int64
     }
 
     if offer.amount_msat != nil {
-        return .right(FetchInvoiceReq(offer: offer_str, amount: .any, quantity: qty))
+        return .right(.init(offer: offer_str, pay_amt: pay_amt, amount: .any, quantity: qty))
     } else {
-        guard let amt = amount else {
-            return .left("Amount required for offer")
-        }
-
-        return .right(FetchInvoiceReq(offer: offer_str, amount: .amount(amt), quantity: qty))
+        let amount: InvoiceAmount = .amount(pay_amt.amount)
+        return .right(.init(offer: offer_str, pay_amt: pay_amt, amount: amount, quantity: qty))
     }
 }
 
@@ -310,19 +433,25 @@ public enum Either<L, R> {
     case right(R)
 }
 
-func confirm_payment(bolt11: String, lnlink: LNLink) -> Either<String, Pay> {
-    // do a fresh connection for each payment
-    let ln = LNSocket()
+func confirm_payment(ln mln: LNSocket?, lnlink: LNLink, bolt11: String, pay_amt: PayAmount?) -> Either<String, Pay> {
+    let ln = mln ?? LNSocket()
 
-    guard ln.connect_and_init(node_id: lnlink.node_id, host: lnlink.host) else {
-        return .left("Failed to connect, please try again!")
+    if mln == nil {
+        guard ln.connect_and_init(node_id: lnlink.node_id, host: lnlink.host) else {
+            return .left("Failed to connect, please try again!")
+        }
+    }
+
+    var amount_msat: Int64? = nil
+    if pay_amt != nil {
+        amount_msat = pay_amt!.amount + (pay_amt!.tip ?? 0)
     }
 
     let res = rpc_pay(
         ln: ln,
         token: lnlink.token,
         bolt11: bolt11,
-        amount_msat: nil)
+        amount_msat: amount_msat)
 
     switch res {
     case .failure(let req_err):
@@ -344,6 +473,8 @@ func is_ready(_ state: PayState) -> ReadyInvoice? {
     switch state {
     case .ready(let ready_invoice):
         return ready_invoice
+    case .offer_input(let ready_invoice, _):
+        return ready_invoice
     case .fetch_invoice: fallthrough
     case .initial: fallthrough
     case .decoding: fallthrough
@@ -352,18 +483,6 @@ func is_ready(_ state: PayState) -> ReadyInvoice? {
     }
 }
 
-func amount_view_inv(_ amt: InvoiceAmount) -> some View {
-    Group {
-        switch amt {
-        case .any:
-            Text("Custom amounts not supported yet :(")
-        case .amount(let amt):
-            Text("Pay")
-            Text("\(render_amount_msats(amt))")
-                .font(.title)
-        }
-    }
-}
 
 func render_amount(_ amt: InvoiceAmount) -> String {
     switch amt {
@@ -371,6 +490,8 @@ func render_amount(_ amt: InvoiceAmount) -> String {
         return "Enter amount"
     case .amount(let amt):
         return "\(render_amount_msats(amt))?"
+    case .min(let min):
+        return "\(render_amount_msats(min))?"
     }
 }
 
@@ -391,3 +512,41 @@ struct PayView_Previews: PreviewProvider {
     }
 }
 */
+
+func handle_bolt12_offer(ln: LNSocket, decoded: Decode, inv: String) -> Either<String, PayState> {
+    if decoded.amount_msat != nil {
+        guard let min_amt = parse_msat(decoded.amount_msat!) else {
+            return .left("Error parsing amount_msat: '\(decoded.amount_msat!)'")
+        }
+        let ready = ReadyInvoice(invoice: inv, amount: .min(min_amt))
+        return .right(.offer_input(ready, decoded))
+    } else {
+        let ready = ReadyInvoice(invoice: inv, amount: .any)
+        return .right(.offer_input(ready, decoded))
+    }
+}
+
+
+func confirm_offer(ln: LNSocket, bolt12: String, decoded: Decode, pay_amt: PayAmount) -> Either<String, PayState> {
+    let req = fetchinvoice_req_from_offer(offer: decoded, offer_str: bolt12, pay_amt: pay_amt)
+    switch req {
+    case .left(let err):
+        return .left(err)
+    case .right(let req):
+        return .right(.fetch_invoice(ln, req))
+    }
+}
+
+func should_show_confirm(_ state: PayState) -> Bool {
+    switch state {
+    case .ready: fallthrough
+    case .offer_input:
+        return true
+
+    case .decoded: fallthrough
+    case .initial: fallthrough
+    case .fetch_invoice: fallthrough
+    case .decoding:
+        return false
+    }
+}

@@ -15,6 +15,7 @@ public enum DecodeType {
 
 public enum InvoiceAmount {
     case amount(Int64)
+    case min(Int64)
     case any
 }
 

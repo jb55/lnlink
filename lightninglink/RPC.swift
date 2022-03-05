@@ -316,11 +316,9 @@ public func rpc_fetchinvoice(ln: LNSocket, token: String, req: FetchInvoiceReq) 
 {
     var params: [String: String] = [ "offer": req.offer ]
 
-    switch req.amount {
-    case .amount(let amt):
+    if req.pay_amt != nil {
+        let amt = req.pay_amt!.amount + (req.pay_amt!.tip ?? 0)
         params["msatoshi"] = "\(amt)msat"
-    case .any:
-        break
     }
 
     if req.quantity != nil {
