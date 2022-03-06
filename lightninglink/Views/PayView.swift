@@ -461,7 +461,7 @@ struct PayView: View {
             return
         }
 
-        guard let expiry = invoice.expiry else {
+        guard let expiry = get_decode_expiry(invoice) else {
             self.expiry_percent = nil
             return
         }

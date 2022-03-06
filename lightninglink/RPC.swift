@@ -52,6 +52,7 @@ public struct Decode: Decodable {
     public var valid: Bool
     public var created_at: Int64?
     public var expiry: Int64?
+    public var relative_expiry: Int64?
     public var payee: String?
     public var msatoshi: Int64?
     public var quantity_min: Int?
@@ -59,6 +60,16 @@ public struct Decode: Decodable {
     public var node_id: String?
     public var amount_msat: String?
     public var vendor: String?
+}
+
+func get_decode_expiry(_ decode: Decode) -> Int64? {
+    // bolt11
+    if decode.expiry != nil {
+        return decode.expiry
+    }
+
+    // bolt12
+    return decode.relative_expiry
 }
 
 public struct FetchInvoice: Decodable {
