@@ -25,6 +25,13 @@ public struct FetchInvoiceReq {
     let quantity: Int?
 }
 
+public enum TipSelection {
+    case none
+    case fifteen
+    case twenty
+    case twenty_five
+}
+
 public enum PayState {
     case initial
     case decoding(LNSocket?, String)
@@ -47,6 +54,7 @@ struct PayView: View {
     @State var expiry_percent: Double?
     @State var custom_amount_input: String = ""
     @State var custom_amount_msats: Int64 = 0
+    @State var current_tip: TipSelection = .none
 
     @Environment(\.presentationMode) var presentationMode
 
@@ -173,12 +181,20 @@ struct PayView: View {
         }
     }
 
-    func tip_percent(_ percent: Double) {
-        if percent == 0 {
+    func tip_percent(_ tip: TipSelection) {
+        if tip == self.current_tip {
+            self.current_tip = .none
             self.custom_amount_msats = 0
             return
         }
 
+        self.current_tip = tip
+        let percent = tip_value(tip)
+
+        if tip == .none {
+            self.custom_amount_msats = 0
+            return
+        }
         guard let invoice = self.invoice else {
             return
         }
@@ -196,31 +212,28 @@ struct PayView: View {
         Group {
             Text("Tip?")
             HStack {
-                Button("None") {
-                    tip_percent(0)
-                }
-                .padding()
-
-                Button("10%") {
-                    tip_percent(0.1)
-                }
-                .padding()
+                let unsel_c: Color = .primary
+                let sel_c: Color = .blue
 
                 Button("15%") {
-                    tip_percent(0.15)
+                    tip_percent(.fifteen)
                 }
-                .padding()
+                .buttonStyle(.bordered)
+                .foregroundColor(current_tip == .fifteen ? sel_c: unsel_c)
 
                 Button("20%") {
-                    tip_percent(0.2)
+                    tip_percent(.twenty)
                 }
-                .padding()
+                .buttonStyle(.bordered)
+                .foregroundColor(current_tip == .twenty ? sel_c: unsel_c)
+
+                Button("25%") {
+                    tip_percent(.twenty_five)
+                }
+                .buttonStyle(.bordered)
+                .foregroundColor(current_tip == .twenty_five ? sel_c: unsel_c)
             }
             .padding()
-
-            let tip_str = self.custom_amount_msats == 0 ? "No tip" : "\(render_amount_msats(self.custom_amount_msats)) tip"
-
-            Text(tip_str)
         }
     }
 
@@ -229,8 +242,11 @@ struct PayView: View {
             Text("Pay")
             switch amt {
             case .min(let min_amt):
-                Text("\(render_amount_msats(min_amt))")
+                Text("\(render_amount_msats(min_amt + self.custom_amount_msats))")
                     .font(.title)
+                Text("\(render_amount_msats(self.custom_amount_msats)) tipped")
+                    .font(.callout)
+                    .foregroundColor(.gray)
                 Spacer()
                 tip_view()
 
@@ -316,9 +332,8 @@ struct PayView: View {
         }
     }
 
-    func confirm_button() -> some View {
-        Group {
-        }
+    func is_tip_selected(_ tip: TipSelection) -> Bool {
+        return tip == self.current_tip
     }
 
     func switch_state(_ state: PayState) {
@@ -566,5 +581,15 @@ func should_show_confirm(_ state: PayState) -> Bool {
     case .initial: fallthrough
     case .decoding:
         return false
+    }
+}
+
+
+func tip_value(_ tip: TipSelection) -> Double {
+    switch tip {
+    case .none: return 0
+    case .fifteen: return 0.15
+    case .twenty: return 0.2
+    case .twenty_five: return 0.25
     }
 }
