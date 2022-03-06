@@ -75,7 +75,11 @@ struct SetupView: View {
     func setup_view() -> some View {
         VStack {
             Text("Connect")
-                .font(.headline)
+                .font(.largeTitle)
+            Text("Scan a LNLink QR Code to connect to your clightning node")
+                .multilineTextAlignment(.center)
+                .font(.subheadline)
+                .foregroundColor(.gray)
 
             Spacer()
 

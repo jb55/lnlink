@@ -115,6 +115,7 @@ struct PayView: View {
                 let invoice = self.invoice!
                 if invoice.description != nil {
                     Text(invoice.description!)
+                        .multilineTextAlignment(.center)
                         .padding()
                 }
 
@@ -179,10 +180,20 @@ struct PayView: View {
     }
 
     func handle_custom_receive(_ new_val: String) {
-        let ok = new_val.allSatisfy { $0 >= "0" && $0 <= "9" }
+        if new_val == "" {
+            self.custom_amount_input = ""
+            return
+        }
+
+        let ok = new_val.allSatisfy { $0 == "," || ($0 >= "0" && $0 <= "9") }
         if ok {
-            self.custom_amount_input = new_val
-            let msats = (Int64(new_val) ?? 0) * 1000
+            let num_fmt = NumberFormatter()
+            num_fmt.numberStyle = .decimal
+
+            let filtered = new_val.filter { $0 >= "0" && $0 <= "9" }
+            let sats = Int64(filtered) ?? 0
+            let msats = sats * 1000
+            self.custom_amount_input = num_fmt.string(from: NSNumber(value: sats)) ?? new_val
             self.custom_amount_msats = msats
         }
     }
@@ -272,7 +283,7 @@ struct PayView: View {
                     Form {
                         Section {
                             HStack(alignment: .lastTextBaseline) {
-                                TextField("100", text: $custom_amount_input)
+                                TextField("10,000", text: $custom_amount_input)
                                     .font(.title)
                                     .keyboardType(.numberPad)
                                     .multilineTextAlignment(.trailing)
@@ -566,11 +577,16 @@ func render_amount(_ amt: InvoiceAmount) -> String {
 }
 
 func render_amount_msats(_ amount: Int64) -> String {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .decimal
+
     if amount < 1000 {
-        return "\(amount) msats"
+        let amt_str = formatter.string(from: NSNumber(value: amount))!
+        return "\(amt_str) msats"
     }
 
-    return "\(amount / 1000) sats"
+    let amt_str = formatter.string(from: NSNumber(value: amount / 1000))!
+    return "\(amt_str) sats"
 }
 
 /*

@@ -12,6 +12,14 @@ extension Notification.Name {
     static var sentPayment: Notification.Name {
         return Notification.Name("did send payment")
     }
+
+    static var reset: Notification.Name {
+        return Notification.Name("reset lnlink")
+    }
+
+    static var donate: Notification.Name {
+        return Notification.Name("donate")
+    }
 }
 
 enum ActiveAlert: Identifiable {
@@ -115,30 +123,32 @@ struct ContentView: View {
     }
 
     func main_content() -> some View {
+        NavigationView {
         VStack {
             VStack {
-            HStack {
-                VStack {
-                Text(self.dashboard.info.alias)
-                    .font(.title)
+                HStack {
+                    VStack {
+                    Text(self.dashboard.info.alias)
+                        .font(.title)
+                    }
+
+                    Spacer()
+
+                    NavigationLink(destination: SettingsView()) {
+                        Label("", systemImage: "gear")
+                            .font(.system(size: 24))
+                            .foregroundColor(.gray)
+                    }
                 }
 
-                Spacer()
+                HStack {
+                    Text("\(self.dashboard.info.msatoshi_fees_collected / 1000) sats earned")
+                        .font(.footnote)
+                        .foregroundColor(.gray)
 
-                Button("Reset") {
-                    reset_lnlink()
-                    self.is_reset = true
+                    Spacer()
                 }
-            }
-
-            HStack {
-                Text("\(self.dashboard.info.msatoshi_fees_collected / 1000) sats earned")
-                    .font(.footnote)
-                    .foregroundColor(.gray)
-
-                Spacer()
-            }
-            }
+                }
             .padding()
 
             Spacer()
@@ -211,6 +221,16 @@ struct ContentView: View {
             last_pay = payment.object as! Pay
             self.active_sheet = nil
             refresh_funds()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .reset)) { _ in
+            self.is_reset = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .donate)) { _ in
+            self.active_sheet = .pay(.offer, "lno1pfsycnjvd9hxkgrfwvsxvun9v5s8xmmxw3mkzun9yysyyateypkk2grpyrcflrd6ypek7gzfyp3kzm3qvdhkuarfde6k2grd0ysxzmrrda5x7mrfwdkj6en4v4kx2epqvdhkg6twvusxzerkv4h8gatjv4eju9q2d3hxc6twdvhxzursrcs08sggen2ndwzjdpqlpfw9sgfth8n9sjs7kjfssrnurnp5lqk66u0sgr32zxwrh0kmxnvmt5hyn0my534209573mp9ck5ekvywvugm5x3kq8ztex8yumafeft0arh6dke04jqgckmdzekqxegxzhecl23lurrj")
+        }
+        .navigationBarTitle("", displayMode: .inline)
+        .navigationBarHidden(true)
+
         }
 
     }

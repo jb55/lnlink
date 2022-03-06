@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4C035A0027AEF90000FF92CE /* PayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0359FF27AEF90000FF92CE /* PayView.swift */; };
 		4C035A0427AEFD2F00FF92CE /* Invoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C035A0327AEFD2F00FF92CE /* Invoice.swift */; };
+		4C3DC97127D4829A00773021 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3DC97027D4829A00773021 /* SettingsView.swift */; };
 		4C641D192788FF2F002A36C9 /* lightninglinkApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C641D182788FF2F002A36C9 /* lightninglinkApp.swift */; };
 		4C641D1B2788FF2F002A36C9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C641D1A2788FF2F002A36C9 /* ContentView.swift */; };
 		4C641D1D2788FF30002A36C9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C641D1C2788FF30002A36C9 /* Assets.xcassets */; };
@@ -50,6 +51,7 @@
 		4C0359FE27AEEE8500FF92CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4C0359FF27AEF90000FF92CE /* PayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayView.swift; sourceTree = "<group>"; };
 		4C035A0327AEFD2F00FF92CE /* Invoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Invoice.swift; sourceTree = "<group>"; };
+		4C3DC97027D4829A00773021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		4C641D152788FF2F002A36C9 /* lightninglink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lightninglink.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C641D182788FF2F002A36C9 /* lightninglinkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lightninglinkApp.swift; sourceTree = "<group>"; };
 		4C641D1A2788FF2F002A36C9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -207,6 +209,7 @@
 				4C0359FF27AEF90000FF92CE /* PayView.swift */,
 				4C641D1A2788FF2F002A36C9 /* ContentView.swift */,
 				4CCB0E2A27CA71CA0026461C /* SetupView.swift */,
+				4C3DC97027D4829A00773021 /* SettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -354,6 +357,7 @@
 				4C641D192788FF2F002A36C9 /* lightninglinkApp.swift in Sources */,
 				4CCB0E2B27CA71CA0026461C /* SetupView.swift in Sources */,
 				4C873FD727A6F1F5008C972C /* RPC.swift in Sources */,
+				4C3DC97127D4829A00773021 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -549,7 +553,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/lnsocket/target/ios",
 				);
-				MARKETING_VERSION = 0.1.2;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jb55.lightninglink;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -589,7 +593,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/lnsocket/target/ios",
 				);
-				MARKETING_VERSION = 0.1.2;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jb55.lightninglink;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
