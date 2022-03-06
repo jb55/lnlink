@@ -28,11 +28,13 @@ public func parseInvoiceString(_ invoice: String) -> DecodeType?
         return .offer
     }
 
-    if !inv.starts(with: "lnbc") {
+    let is_bolt11 = inv.starts(with: "lnbc")
+    let is_bolt12 = inv.starts(with: "lni")
+    if !(is_bolt11 || is_bolt12) {
         return nil
     }
 
-    var ind = 4
+    var ind = is_bolt11 ? 4 : 3
     var num: String = ""
     var scale: Character = Character("p")
     var sep: Character
