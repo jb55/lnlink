@@ -55,6 +55,7 @@ struct PayView: View {
     @State var custom_amount_input: String = ""
     @State var custom_amount_msats: Int64 = 0
     @State var current_tip: TipSelection = .none
+    @State var paying: Bool = false
 
     @Environment(\.presentationMode) var presentationMode
 
@@ -101,15 +102,9 @@ struct PayView: View {
 
     func main_view() -> some View {
         return VStack() {
-            if self.invoice != nil {
-                Text("Confirm Payment")
-                    .font(.largeTitle)
-                    .padding()
-            } else {
-                Text("Fetching invoice")
-                    .font(.largeTitle)
-                    .padding()
-            }
+            Text("Confirm Payment")
+                .font(.largeTitle)
+                .padding()
 
             if self.expiry_percent != nil {
                 ProgressView(value: self.expiry_percent! * 100, total: 100)
@@ -137,30 +132,34 @@ struct PayView: View {
             if ready_invoice != nil {
                 amount_view_inv(ready_invoice!.amount)
             }
-
             Text("\(self.error ?? "")")
                 .foregroundColor(Color.red)
+
+            if self.paying {
+                ProgressView()
+                    .progressViewStyle(.circular)
+            }
 
             Spacer()
 
             // Bottom area
-            HStack {
-                Button("Cancel") {
-                    self.dismiss()
-                }
-                .foregroundColor(Color.red)
-                .font(.title)
-
-                Spacer()
-
-               if should_show_confirm(self.state) {
-                    Button("Confirm") {
-                        handle_confirm(ln: nil)
+            if !self.paying {
+                HStack {
+                    Button("Cancel") {
+                        self.dismiss()
                     }
-                    .foregroundColor(Color.green)
+                    .foregroundColor(Color.red)
                     .font(.title)
-               }
 
+                    Spacer()
+                    if should_show_confirmation(ready_invoice?.amount) {
+                        Button("Confirm") {
+                            handle_confirm(ln: nil)
+                        }
+                        .foregroundColor(Color.green)
+                        .font(.title)
+                    }
+                }
             }
         }
         .padding()
@@ -172,11 +171,18 @@ struct PayView: View {
         }
     }
 
+    func should_show_confirmation(_ amt: InvoiceAmount?) -> Bool {
+        if amt != nil && is_any_amount(amt!) && self.custom_amount_msats == 0 {
+            return false
+        }
+        return should_show_confirm(self.state)
+    }
+
     func handle_custom_receive(_ new_val: String) {
-        let filtered = new_val.filter { "0123456789".contains($0) }
-        if filtered != new_val {
-            self.custom_amount_input = filtered
-            let msats = (Int64(filtered) ?? 0) * 1000
+        let ok = new_val.allSatisfy { $0 >= "0" && $0 <= "9" }
+        if ok {
+            self.custom_amount_input = new_val
+            let msats = (Int64(new_val) ?? 0) * 1000
             self.custom_amount_msats = msats
         }
     }
@@ -239,7 +245,12 @@ struct PayView: View {
 
     func amount_view_inv(_ amt: InvoiceAmount) -> some View {
         Group {
-            Text("Pay")
+            if self.paying {
+                Text("Paying...")
+            } else {
+                Text("Pay")
+            }
+
             switch amt {
             case .min(let min_amt):
                 Text("\(render_amount_msats(min_amt + self.custom_amount_msats))")
@@ -247,16 +258,34 @@ struct PayView: View {
                 Text("\(render_amount_msats(self.custom_amount_msats)) tipped")
                     .font(.callout)
                     .foregroundColor(.gray)
-                Spacer()
-                tip_view()
+                if !self.paying {
+                    Spacer()
+                    tip_view()
+                }
 
             case .any:
-                TextField("Amount", text: $custom_amount_input)
-                    .font(.title)
-                    .keyboardType(.numberPad)
-                    .onReceive(Just(self.custom_amount_input)) {
-                        handle_custom_receive($0)
+                if self.paying {
+                    let amt = self.custom_amount_msats
+                    Text("\(render_amount_msats(amt))")
+                        .font(.title)
+                } else {
+                    Form {
+                        Section {
+                            HStack(alignment: .lastTextBaseline) {
+                                TextField("100", text: $custom_amount_input)
+                                    .font(.title)
+                                    .keyboardType(.numberPad)
+                                    .multilineTextAlignment(.trailing)
+                                    .onReceive(Just(self.custom_amount_input)) {
+                                        handle_custom_receive($0)
+                                    }
+                                Text("sats")
+                            }
+                        }
                     }
+                    .frame(height: 100)
+                }
+
             case .amount(let amt):
                 Text("\(render_amount_msats(amt))")
                     .font(.title)
@@ -266,34 +295,39 @@ struct PayView: View {
 
     func confirm_pay(ln: LNSocket?, inv: String, pay_amt: PayAmount?) {
         let res = confirm_payment(ln: ln, lnlink: self.lnlink, bolt11: inv, pay_amt: pay_amt)
-
         switch res {
         case .left(let err):
+            self.paying = false
             self.error = "Error: \(err)"
 
         case .right(let pay):
             print(pay)
-            self.dismiss()
-            NotificationCenter.default.post(name: .sentPayment, object: pay)
+            DispatchQueue.main.async {
+                self.dismiss()
+                NotificationCenter.default.post(name: .sentPayment, object: pay)
+            }
         }
     }
 
-    func get_pay_amount(_ amt: InvoiceAmount) -> PayAmount {
+    func get_pay_amount(_ amt: InvoiceAmount) -> PayAmount? {
         switch amt {
         case .min(let min_amt):
             let tip = self.custom_amount_msats
             return PayAmount(tip: tip, amount: min_amt)
         case .any:
             return PayAmount(tip: 0, amount: custom_amount_msats)
-        case .amount(let amt):
-            return PayAmount(tip: 0, amount: amt)
+        case .amount:
+            return nil
         }
     }
 
     func handle_confirm(ln mln: LNSocket?) {
         switch self.state {
         case .offer_input(let inv, let decoded):
-            let pay_amt = get_pay_amount(inv.amount)
+            guard let pay_amt = get_pay_amount(inv.amount) else {
+                self.error = "Expected payment amount for bolt12"
+                return
+            }
             let req = fetchinvoice_req_from_offer(
                 offer: decoded,
                 offer_str: inv.invoice,
@@ -303,16 +337,19 @@ struct PayView: View {
                 self.error = err
             case .right(let req):
                 let token = self.lnlink.token
+                self.paying = true
                 DispatchQueue.global(qos: .background).async {
                     let ln = mln ?? LNSocket()
                     if mln == nil {
                         guard ln.connect_and_init(node_id: self.lnlink.node_id, host: self.lnlink.host) else {
+                            self.paying = false
                             self.error = "Connection failed when fetching invoice"
                             return
                         }
                     }
                     switch rpc_fetchinvoice(ln: ln, token: token, req: req) {
                     case .failure(let err):
+                        self.paying = false
                         self.error = err.description
                     case .success(let fetch_invoice):
                         confirm_pay(ln: ln, inv: fetch_invoice.invoice, pay_amt: nil)
@@ -323,7 +360,10 @@ struct PayView: View {
 
         case .ready(let ready_invoice):
             let pay_amt = get_pay_amount(ready_invoice.amount)
-            confirm_pay(ln: mln, inv: ready_invoice.invoice, pay_amt: pay_amt)
+            self.paying = true
+            DispatchQueue.global(qos: .background).async {
+                confirm_pay(ln: mln, inv: ready_invoice.invoice, pay_amt: pay_amt)
+            }
 
         case .initial: fallthrough
         case .decoding: fallthrough
@@ -357,15 +397,6 @@ struct PayView: View {
                 break
             }
 
-    }
-
-    func handle_fetch_invoice(ln: LNSocket, req: FetchInvoiceReq) {
-        switch rpc_fetchinvoice(ln: ln, token: self.lnlink.token, req: req) {
-        case .failure(let err):
-            self.error = err.description
-        case .success(let fetch_invoice):
-            confirm_pay(ln: ln, inv: fetch_invoice.invoice, pay_amt: req.pay_amt)
-        }
     }
 
     func handle_offer(ln: LNSocket, decoded: Decode, inv: String) {
@@ -509,11 +540,6 @@ func confirm_payment(ln mln: LNSocket?, lnlink: LNLink, bolt11: String, pay_amt:
     }
 }
 
-func amount_view(_ state: PayState) -> some View {
-    Group {
-    }
-}
-
 func is_ready(_ state: PayState) -> ReadyInvoice? {
     switch state {
     case .ready(let ready_invoice):
@@ -591,5 +617,14 @@ func tip_value(_ tip: TipSelection) -> Double {
     case .fifteen: return 0.15
     case .twenty: return 0.2
     case .twenty_five: return 0.25
+    }
+}
+
+func is_any_amount(_ amt: InvoiceAmount) -> Bool {
+    switch amt {
+    case .any:
+        return true
+    default:
+        return false
     }
 }
