@@ -1,10 +1,11 @@
 (B) receive funds / create invoice view
-parse lnurl
+(A) parse lnurl
 make lnurl request
 create offer
 subscriptions
 alert confirmation on reset @ux
 encrypt token with secure enclave @security
 deterministic nodeid for more secure tokens with id restrictions @security
-(A) custom amount input support
 bolt12 invoice request
+(C) fiat-denominated custom amount input buttons
+(C) refresh contentview when switching to app
