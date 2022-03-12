@@ -47,6 +47,7 @@ struct SetupView: View {
     @State var error: String? = nil
     @State var dashboard: Dashboard = .empty
     @State var lnlink: LNLink? = nil
+    @State var scan_invoice: String? = nil
 
     func perform_validation(_ lnlink: LNLink) {
         DispatchQueue.global(qos: .background).async {
@@ -101,6 +102,9 @@ struct SetupView: View {
             Link("What the heck is LNLink?", destination: URL(string:"http://lnlink.app/qr")!)
         }
         .padding()
+        .onOpenURL() { url in
+            self.scan_invoice = url.absoluteString
+        }
         .sheet(item: $active_sheet) { active_sheet in
             switch active_sheet {
             case .qr:
@@ -128,12 +132,16 @@ struct SetupView: View {
     }
 
     func validating_view(lnlink: LNLink) -> some View {
-        Text("Connecting...")
+        ProgressView()
+            .progressViewStyle(.circular)
             .onAppear() {
                 self.perform_validation(lnlink)
             }
+            .onOpenURL() { url in
+                self.scan_invoice = url.absoluteString
+            }
     }
-
+    
     var body: some View {
         Group {
             switch self.state {
@@ -142,7 +150,7 @@ struct SetupView: View {
             case .validating(let lnlink):
                 validating_view(lnlink: lnlink)
             case .validated:
-                ContentView(dashboard: self.dashboard, lnlink: self.lnlink!)
+                ContentView(dashboard: self.dashboard, lnlink: self.lnlink!, scan_invoice: self.scan_invoice)
             }
         }
     }
@@ -165,9 +173,6 @@ func parse_auth_qr(_ qr: String) -> Either<String, LNLink> {
     if auth_qr.hasPrefix("lnlink:") && !auth_qr.hasPrefix("lnlink://") {
         auth_qr = qr.replacingOccurrences(of: "lnlink:", with: "lnlink://")
     }
-
-    // some qrcodes are weird like this
-    auth_qr = auth_qr.trimmingCharacters(in: .whitespacesAndNewlines)
 
     guard let url = URL(string: auth_qr) else {
         return .left("Invalid url")

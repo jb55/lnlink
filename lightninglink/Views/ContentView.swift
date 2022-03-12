@@ -82,13 +82,15 @@ struct ContentView: View {
     @State private var dashboard: Dashboard
     @State private var funds: Funds
     @State private var is_reset: Bool = false
+    @State private var scan_invoice: String?
 
-    private var lnlink: LNLink
+    private let lnlink: LNLink
 
-    init(dashboard: Dashboard, lnlink: LNLink) {
+    init(dashboard: Dashboard, lnlink: LNLink, scan_invoice: String?) {
         self.dashboard = dashboard
         self.lnlink = lnlink
         self.has_alert = false
+        self.scan_invoice = scan_invoice
         self.funds = Funds.from_listfunds(fs: dashboard.funds)
     }
 
@@ -193,18 +195,7 @@ struct ContentView: View {
                 CodeScannerView(codeTypes: SCAN_TYPES) { res in
                     switch res {
                     case .success(let scan_res):
-                        let code = scan_res.string
-                        var invstr: String = code
-                        if code.starts(with: "lightning:") {
-                            let index = code.index(code.startIndex, offsetBy: 10)
-                            invstr = String(code[index...])
-                        }
-                        invstr = invstr.trimmingCharacters(in: .whitespacesAndNewlines)
-                        let m_parsed = parseInvoiceString(invstr)
-                        guard let parsed = m_parsed else {
-                            return
-                        }
-                        self.active_sheet = .pay(parsed, invstr)
+                        handle_scan(scan_res.string)
 
                     case .failure:
                         self.active_sheet = nil
@@ -228,11 +219,36 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .donate)) { _ in
             self.active_sheet = .pay(.offer, "lno1pfsycnjvd9hxkgrfwvsxvun9v5s8xmmxw3mkzun9yysyyateypkk2grpyrcflrd6ypek7gzfyp3kzm3qvdhkuarfde6k2grd0ysxzmrrda5x7mrfwdkj6en4v4kx2epqvdhkg6twvusxzerkv4h8gatjv4eju9q2d3hxc6twdvhxzursrcs08sggen2ndwzjdpqlpfw9sgfth8n9sjs7kjfssrnurnp5lqk66u0sgr32zxwrh0kmxnvmt5hyn0my534209573mp9ck5ekvywvugm5x3kq8ztex8yumafeft0arh6dke04jqgckmdzekqxegxzhecl23lurrj")
         }
+        .onOpenURL() { url in
+            handle_scan(url.absoluteString)
+        }
+        .onAppear() {
+            if scan_invoice != nil {
+                handle_scan(scan_invoice!)
+                scan_invoice = nil
+            }
+        }
         .navigationBarTitle("", displayMode: .inline)
         .navigationBarHidden(true)
 
         }
 
+    }
+    
+    func handle_scan(_ str: String) {
+        switch handle_qrcode(str) {
+        case .left(let err):
+            print("scan error: \(err)")
+            break
+        case .right(let scanres):
+            switch scanres {
+            case .lightning(let decode, let invstr):
+                self.active_sheet = .pay(decode, invstr)
+            case .lnlink:
+                print("got a lnlink, not an invoice")
+                // TODO: report that this is an lnlink, not an invoice
+            }
+        }
     }
 
     var body: some View {
@@ -253,6 +269,37 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
  */
+
+public enum LNScanResult {
+    case lightning(DecodeType, String)
+    case lnlink(LNLink)
+}
+
+
+func handle_qrcode(_ qr: String) -> Either<String, LNScanResult> {
+    var invstr = qr.trimmingCharacters(in: .whitespacesAndNewlines)
+    let lowered = invstr.lowercased()
+    
+    if lowered.starts(with: "lnlink:") {
+        switch parse_auth_qr(invstr) {
+        case .left(let err):
+            return .left(err)
+        case .right(let lnlink):
+            return .right(.lnlink(lnlink))
+        }
+    }
+    
+    if lowered.starts(with: "lightning:") {
+        let index = invstr.index(invstr.startIndex, offsetBy: 10)
+        invstr = String(lowered[index...])
+    }
+    
+    guard let parsed = parseInvoiceString(invstr) else {
+        return .left("Failed to parse invoice")
+    }
+    
+    return .right(.lightning(parsed, invstr))
+}
 
 
 func get_clipboard_invoice() -> (DecodeType, String)? {
