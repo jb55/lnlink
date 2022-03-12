@@ -234,16 +234,15 @@ func make_commando_msg<IN: Encodable>(authToken: String, operation: String, para
         return nil
     }
     var buf = [UInt8](repeating: 0, count: 65536)
-    var outlen: UInt16 = 0
-    var ok: Bool = false
+    var outlen: Int32 = 0
 
     authToken.withCString { token in
     operation.withCString { op in
     params_json.withCString { ps in
-        ok = commando_make_rpc_msg(op, ps, token, 1, &buf, Int32(buf.capacity), &outlen) != 0
+        outlen = commando_make_rpc_msg(op, ps, token, 1, &buf, Int32(buf.capacity))
     }}}
 
-    guard ok else {
+    guard outlen != 0 else {
         return nil
     }
 
