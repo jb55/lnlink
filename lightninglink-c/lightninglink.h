@@ -10,6 +10,7 @@
 
 #include "lnsocket.h"
 #include "commando.h"
+#include "bech32.h"
 
 void fd_do_zero(fd_set *);
 void fd_do_set(int, fd_set *);

@@ -9,13 +9,15 @@ import Foundation
 
 
 public enum DecodeType {
-    case offer
-    case invoice(InvoiceAmount)
+    case offer(String)
+    case invoice(InvoiceAmount, String)
+    case lnurl(URL)
 }
 
 public enum InvoiceAmount {
     case amount(Int64)
     case min(Int64)
+    case range(Int64, Int64)
     case any
 }
 
@@ -25,7 +27,7 @@ public func parseInvoiceString(_ invoice: String) -> DecodeType?
     let inv = invoice.lowercased()
 
     if inv.starts(with: "lno1") {
-        return .offer
+        return .offer(inv)
     }
 
     let is_bolt11 = inv.starts(with: "lnbc")
@@ -55,7 +57,7 @@ public func parseInvoiceString(_ invoice: String) -> DecodeType?
             num = String(inv[start_ind..<end_ind])
 
             if sep != "1" {
-                return .invoice(.any)
+                return .invoice(.any, inv)
             }
 
             break
@@ -71,12 +73,15 @@ public func parseInvoiceString(_ invoice: String) -> DecodeType?
     }
 
     switch scale {
-    case "m": return .invoice(.amount(Int64(n * 100000000)));
-    case "u": return .invoice(.amount(Int64(n * 100000)));
-    case "n": return .invoice(.amount(Int64(n * 100)));
-    case "p": return .invoice(.amount(Int64(n * 1)));
+    case "m": return .invoice(.amount(Int64(n * 100000000)), inv);
+    case "u": return .invoice(.amount(Int64(n * 100000)), inv);
+    case "n": return .invoice(.amount(Int64(n * 100)), inv);
+    case "p": return .invoice(.amount(Int64(n * 1)), inv);
     default: return nil
     }
+}
+
+public func lnurl_decode(_ str: String) {
 }
 
 /*
