@@ -30,7 +30,7 @@ enum ActiveAlert: Identifiable {
         }
     }
 
-    case pay(DecodeType)
+    case pay(LNScanResult)
 }
 
 public enum ActiveSheet: Identifiable {
@@ -75,23 +75,22 @@ struct Funds {
 let SCAN_TYPES: [AVMetadataObject.ObjectType] = [.qr]
 
 struct ContentView: View {
-    @State private var active_sheet: ActiveSheet?
-    @State private var active_alert: ActiveAlert?
+    @State private var active_sheet: ActiveSheet? = nil
+    @State private var active_alert: ActiveAlert? = nil
     @State private var has_alert: Bool = false
     @State private var last_pay: Pay?
-    @State private var dashboard: Dashboard = .empty
     @State private var funds: Funds = .empty
     @State private var is_reset: Bool = false
-    @State private var scan_invoice: String?
+    @State private var scan_invoice: String? = nil
 
+    private let dashboard: Dashboard
     private let lnlink: LNLink
+    private let init_scan_invoice: String?
 
     init(dashboard: Dashboard, lnlink: LNLink, scan_invoice: String?) {
-        self.lnlink = lnlink
         self.dashboard = dashboard
-        self.has_alert = false
-        self.scan_invoice = scan_invoice
-        self.funds = Funds.from_listfunds(fs: dashboard.funds)
+        self.init_scan_invoice = scan_invoice
+        self.lnlink = lnlink
     }
 
     func refresh_funds() {
@@ -185,8 +184,8 @@ struct ContentView: View {
                 self.has_alert = false
                 self.active_alert = nil
                 switch alert {
-                case .pay(let decode):
-                    self.active_sheet = .pay(decode)
+                case .pay(let scanres):
+                    handle_scan_result(scanres)
                 }
             }
         }
@@ -226,8 +225,8 @@ struct ContentView: View {
         }
         .onAppear() {
             refresh_funds()
-            if scan_invoice != nil {
-                handle_scan(scan_invoice!)
+            if init_scan_invoice != nil {
+                handle_scan(init_scan_invoice!)
                 scan_invoice = nil
             }
         }
@@ -238,22 +237,25 @@ struct ContentView: View {
 
     }
 
+    func handle_scan_result(_ scanres: LNScanResult) {
+        switch scanres {
+        case .lightning(let decode):
+            self.active_sheet = .pay(decode)
+        case .lnlink:
+            print("got a lnlink, not an invoice")
+            // TODO: report that this is an lnlink, not an invoice
+        case .lnurl(let lnurl):
+            let decode: DecodeType = .lnurl(lnurl)
+            self.active_sheet = .pay(decode)
+        }
+    }
+
     func handle_scan(_ str: String) {
         switch handle_qrcode(str) {
         case .left(let err):
             print("scan error: \(err)")
-            break
         case .right(let scanres):
-            switch scanres {
-            case .lightning(let decode):
-                self.active_sheet = .pay(decode)
-            case .lnlink:
-                print("got a lnlink, not an invoice")
-                // TODO: report that this is an lnlink, not an invoice
-            case .lnurl(let lnurl):
-                let decode: DecodeType = .lnurl(lnurl)
-                self.active_sheet = .pay(decode)
-            }
+            handle_scan_result(scanres)
         }
     }
 
@@ -277,14 +279,15 @@ struct ContentView_Previews: PreviewProvider {
  */
 
 
-func get_clipboard_invoice() -> DecodeType? {
+func get_clipboard_invoice() -> LNScanResult? {
     guard let inv = UIPasteboard.general.string else {
         return nil
     }
 
-    guard let amt = parseInvoiceString(inv) else {
+    switch handle_qrcode(inv) {
+    case .left:
         return nil
+    case .right(let scanres):
+        return scanres
     }
-
-    return amt
 }

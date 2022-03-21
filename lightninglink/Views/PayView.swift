@@ -173,7 +173,7 @@ struct PayView: View {
             Text("\(self.error ?? "")")
                 .foregroundColor(Color.red)
 
-            if self.paying {
+            if self.should_show_progress() {
                 ProgressView()
                     .progressViewStyle(.circular)
             }
@@ -214,6 +214,10 @@ struct PayView: View {
             return false
         }
         return should_show_confirm(self.state)
+    }
+
+    func should_show_progress() -> Bool {
+        return self.paying || (self.error == nil && is_ready(self.state) == nil)
     }
 
     func handle_custom_receive(_ new_val: String) {
@@ -612,6 +616,7 @@ struct PayView: View {
         }
 
         guard now < expires_at else {
+            self.error = "Invoice expired"
             self.expiry_percent = nil
             return
         }
