@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 
 public typealias RequestRes<T> = Result<T, RequestError<RpcErrorData>>
@@ -46,7 +47,55 @@ public struct Channel: Decodable {
     public var channel_total_sat: Int64
 }
 
-public struct Decode: Decodable {
+public struct LNUrlPayDecode {
+    public let description: String?
+    public let longDescription: String?
+    public let thumbnail: Image?
+    public let vendor: String
+}
+
+public enum Decode {
+    case invoice(InvoiceDecode)
+    case lnurlp(LNUrlPayDecode)
+
+    func thumbnail() -> Image? {
+        switch self {
+        case .lnurlp(let decode):
+            return decode.thumbnail
+        case .invoice:
+            return nil
+        }
+    }
+
+    func description() -> String? {
+        switch self {
+        case .invoice(let inv):
+            return inv.description
+        case .lnurlp(let lnurl):
+            return lnurl.description
+        }
+    }
+
+    func vendor() -> String? {
+        switch self {
+        case .invoice(let inv):
+            return inv.vendor
+        case .lnurlp(let lnurl):
+            return lnurl.vendor
+        }
+    }
+
+    func amount_msat() -> String? {
+        switch self {
+        case .invoice(let inv):
+            return inv.amount_msat
+        case .lnurlp:
+            return nil
+        }
+    }
+}
+
+public struct InvoiceDecode: Decodable {
     public var type: String
     public var currency: String?
     public var valid: Bool
@@ -62,7 +111,7 @@ public struct Decode: Decodable {
     public var vendor: String?
 }
 
-func get_decode_expiry(_ decode: Decode) -> Int64? {
+func get_decode_expiry(_ decode: InvoiceDecode) -> Int64? {
     // bolt11
     if decode.expiry != nil {
         return decode.expiry
@@ -316,7 +365,7 @@ public func rpc_listfunds(ln: LNSocket, token: String) -> RequestRes<ListFunds>
     return performRpc(ln: ln, operation: "listfunds", authToken: token, timeout_ms: default_timeout, params: params)
 }
 
-public func rpc_decode(ln: LNSocket, token: String, inv: String) -> RequestRes<Decode>
+public func rpc_decode(ln: LNSocket, token: String, inv: String) -> RequestRes<InvoiceDecode>
 {
     let params = [ inv ];
     return performRpc(ln: ln, operation: "decode", authToken: token, timeout_ms: 1000, params: params)

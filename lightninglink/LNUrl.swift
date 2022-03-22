@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 public struct LNUrlDecode {
     let encoded: Bech32
@@ -155,3 +156,39 @@ func handle_lnurl(_ url: URL, completion: @escaping (LNUrl?) -> ()) {
     task.resume()
 }
 
+
+func decode_lnurlp_metadata(_ lnurlp: LNUrlPay) -> LNUrlPayDecode {
+    var metadata = Array<Array<String>>()
+    do {
+        metadata = try JSONDecoder().decode(Array<Array<String>>.self, from: Data(lnurlp.metadata.utf8))
+    } catch {
+
+    }
+
+    var description: String? = nil
+    var longDescription: String? = nil
+    var thumbnail: Image? = nil
+    var vendor: String = lnurlp.callback.host ?? ""
+
+    for entry in metadata {
+        if entry.count == 2 {
+            if entry[0] == "text/plain" {
+                description = entry[1]
+            } else if entry[0] == "text/identifier" {
+                vendor = entry[1]
+            } else if entry[0] == "text/long-desc" {
+                longDescription = entry[1]
+            } else if entry[0] == "image/png;base64" || entry[0] == "image/jpg;base64" {
+                guard let dat = Data(base64Encoded: entry[1]) else {
+                    continue
+                }
+                guard let ui_img = UIImage(data: dat) else {
+                    continue
+                }
+                thumbnail = Image(uiImage: ui_img)
+            }
+        }
+    }
+
+    return LNUrlPayDecode(description: description, longDescription: longDescription, thumbnail:    thumbnail, vendor: vendor)
+}

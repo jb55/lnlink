@@ -11,7 +11,7 @@ import Combine
 public struct Offer {
     let offer: String
     let amount: InvoiceAmount
-    let decoded: Decode
+    let decoded: InvoiceDecode
 }
 
 public struct Invoice {
@@ -149,17 +149,21 @@ struct PayView: View {
 
             if self.invoice != nil {
                 let invoice = self.invoice!
-                if invoice.description != nil {
-                    Text(invoice.description!)
+                if invoice.description() != nil {
+                    Text(invoice.description()!)
                         .multilineTextAlignment(.center)
                         .padding()
                 }
 
-                if invoice.vendor != nil {
-                    Text(invoice.vendor!)
+                if invoice.vendor() != nil {
+                    Text(invoice.vendor()!)
                         .font(.callout)
                         .foregroundColor(.gray)
                 }
+            }
+
+            if self.invoice != nil && self.invoice!.thumbnail() != nil {
+                self.invoice!.thumbnail()!
             }
 
             Spacer()
@@ -256,7 +260,7 @@ struct PayView: View {
         guard let invoice = self.invoice else {
             return
         }
-        guard let amount_msat_str = invoice.amount_msat else {
+        guard let amount_msat_str = invoice.amount_msat() else {
             return
         }
         guard let amount_msat = parse_msat(amount_msat_str) else {
@@ -523,10 +527,10 @@ struct PayView: View {
 
     }
 
-    func handle_offer(ln: LNSocket, decoded: Decode, inv: String) {
+    func handle_offer(ln: LNSocket, decoded: InvoiceDecode, inv: String) {
         switch handle_bolt12_offer(ln: ln, decoded: decoded, inv: inv) {
         case .right(let state):
-            self.invoice = decoded
+            self.invoice = .invoice(decoded)
             switch_state(state)
         case .left(let err):
             self.error = err
@@ -534,6 +538,9 @@ struct PayView: View {
     }
 
     func handle_lnurl_payview(ln: LNSocket?, lnurlp: LNUrlPay) {
+        let decode = decode_lnurlp_metadata(lnurlp)
+        self.invoice = .lnurlp(decode)
+
         switch_state(.invoice_request(.lnurl(lnurlp)))
     }
 
@@ -583,7 +590,7 @@ struct PayView: View {
                 }
 
                 self.state = .ready(Invoice(invstr: inv, amount: amount))
-                self.invoice = decoded
+                self.invoice = .invoice(decoded)
                 update_expiry_percent()
             } else {
                 self.error = "unknown decoded type: \(decoded.type)"
@@ -593,46 +600,45 @@ struct PayView: View {
     }
 
     func update_expiry_percent() {
-        guard let invoice = self.invoice else {
-            return
+        if case let .invoice(invoice) = self.invoice {
+            guard let expiry = get_decode_expiry(invoice) else {
+                self.expiry_percent = nil
+                return
+            }
+
+            guard let created_at = invoice.created_at else {
+                self.expiry_percent = nil
+                return
+            }
+
+            let now = Int64(Date().timeIntervalSince1970)
+            let expires_at = created_at + expiry
+
+            guard expiry > 0 else {
+                self.expiry_percent = nil
+                return
+            }
+
+            guard now < expires_at else {
+                self.error = "Invoice expired"
+                self.expiry_percent = nil
+                return
+            }
+
+            guard now >= created_at else {
+                self.expiry_percent = 1
+                return
+            }
+
+            let prog = now - created_at
+            self.expiry_percent = 1.0 - (Double(prog) / Double(expiry))
         }
 
-        guard let expiry = get_decode_expiry(invoice) else {
-            self.expiry_percent = nil
-            return
-        }
-
-        guard let created_at = invoice.created_at else {
-            self.expiry_percent = nil
-            return
-        }
-
-        let now = Int64(Date().timeIntervalSince1970)
-        let expires_at = created_at + expiry
-
-        guard expiry > 0 else {
-            self.expiry_percent = nil
-            return
-        }
-
-        guard now < expires_at else {
-            self.error = "Invoice expired"
-            self.expiry_percent = nil
-            return
-        }
-
-        guard now >= created_at else {
-            self.expiry_percent = 1
-            return
-        }
-
-        let prog = now - created_at
-        self.expiry_percent = 1.0 - (Double(prog) / Double(expiry))
 
     }
 }
 
-func fetchinvoice_req_from_offer(offer: Decode, offer_str: String, pay_amt: PayAmount) -> Either<String, FetchInvoiceReq> {
+func fetchinvoice_req_from_offer(offer: InvoiceDecode, offer_str: String, pay_amt: PayAmount) -> Either<String, FetchInvoiceReq> {
 
     var qty: Int? = nil
     if offer.quantity_min != nil {
@@ -747,7 +753,7 @@ struct PayView_Previews: PreviewProvider {
 }
 */
 
-func handle_bolt12_offer(ln: LNSocket, decoded: Decode, inv: String) -> Either<String, PayState> {
+func handle_bolt12_offer(ln: LNSocket, decoded: InvoiceDecode, inv: String) -> Either<String, PayState> {
     if decoded.amount_msat != nil {
         guard let min_amt = parse_msat(decoded.amount_msat!) else {
             return .left("Error parsing amount_msat: '\(decoded.amount_msat!)'")
@@ -844,3 +850,4 @@ func pay_amount_matches(pay_amt: PayAmount, invoice_amount: InvoiceAmount) -> Bo
 
     return false
 }
+
