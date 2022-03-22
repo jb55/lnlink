@@ -164,6 +164,11 @@ struct PayView: View {
 
             if self.invoice != nil && self.invoice!.thumbnail() != nil {
                 self.invoice!.thumbnail()!
+                    .resizable()
+                    .frame(width: 128, height: 128, alignment: .center)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.black, lineWidth: 4))
+                    .padding()
             }
 
             Spacer()
