@@ -60,7 +60,7 @@ func handle_qrcode(_ qr: String) -> Either<String, LNScanResult> {
         return .right(.lnurl(lnurl))
     }
 
-    guard let parsed = parseInvoiceString(invstr) else {
+    guard let parsed = parseInvoiceString(lowered) else {
         return .left("Failed to parse invoice")
     }
 
