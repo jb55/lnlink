@@ -63,6 +63,9 @@ func decode_bech32(_ str: String) -> Bech32? {
     str.withCString { input in
         typ = bech32_decode(hrp_ptr.baseAddress, bits_buf.baseAddress, &bitslen, input, str.count)
         bech32_convert_bits(data_buf.baseAddress, &datalen, 8, bits_buf.baseAddress, bitslen, 5, 0)
+        if datalen == 0 {
+            return
+        }
         m_data = Data(buffer: data_buf)[...(datalen-1)]
         m_hrp_str = String(cString: hrp_ptr.baseAddress!)
     }
