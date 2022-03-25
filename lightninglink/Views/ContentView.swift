@@ -209,7 +209,7 @@ struct ContentView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .sentPayment)) { payment in
-            last_pay = payment.object as! Pay
+            last_pay = payment.object as? Pay
             self.active_sheet = nil
             refresh_funds()
         }
