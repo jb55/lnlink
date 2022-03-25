@@ -375,16 +375,19 @@ public func rpc_fetchinvoice(ln: LNSocket, token: String, req: FetchInvoiceReq) 
 {
     var params: [String: String] = [ "offer": req.offer ]
 
-    if req.pay_amt != nil {
-        let amt = req.pay_amt!.amount + (req.pay_amt!.tip ?? 0)
+    if let pay_amt = req.pay_amt {
+        let amt = pay_amt.amount + (pay_amt.tip ?? 0)
         params["msatoshi"] = "\(amt)msat"
     }
 
-    if req.quantity != nil {
-        params["quantity"] = "\(req.quantity!)"
+    let timeout = req.timeout ?? 15
+    params["timeout"] = "\(timeout)"
+
+    if let qty = req.quantity {
+        params["quantity"] = "\(qty)"
     }
 
-    return performRpc(ln: ln, operation: "fetchinvoice", authToken: token, timeout_ms: 10000, params: params)
+    return performRpc(ln: ln, operation: "fetchinvoice", authToken: token, timeout_ms: Int32((timeout + 2) * 1000), params: params)
 }
 
 public func maybe_decode_error_json<T: Decodable>(_ dat: Data) -> Either<String, T>? {

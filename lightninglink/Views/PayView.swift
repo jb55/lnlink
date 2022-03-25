@@ -61,6 +61,7 @@ public struct FetchInvoiceReq {
     let pay_amt: PayAmount?
     let amount: InvoiceAmount
     let quantity: Int?
+    let timeout: Int?
 }
 
 public enum TipSelection {
@@ -650,11 +651,26 @@ func fetchinvoice_req_from_offer(offer: InvoiceDecode, offer_str: String, pay_am
         qty = offer.quantity_min!
     }
 
+    // TODO: should we wait longer to fetch an invoice??
+    let timeout = 10
+
     if offer.amount_msat != nil {
-        return .right(.init(offer: offer_str, pay_amt: pay_amt, amount: .any, quantity: qty))
+        return .right(.init(
+            offer: offer_str,
+            pay_amt: pay_amt,
+            amount: .any,
+            quantity: qty,
+            timeout: timeout
+        ))
     } else {
         let amount: InvoiceAmount = .amount(pay_amt.amount)
-        return .right(.init(offer: offer_str, pay_amt: pay_amt, amount: amount, quantity: qty))
+        return .right(.init(
+            offer: offer_str,
+            pay_amt: pay_amt,
+            amount: amount,
+            quantity: qty,
+            timeout: timeout
+        ))
     }
 }
 
