@@ -331,7 +331,7 @@ struct PayView: View {
                     Text("\(render_amount_msats(amt))")
                         .font(.title)
                 } else {
-                    InputView {
+                    AmountInput(text: $custom_amount_input) {
                         handle_custom_receive($0)
                         if self.custom_amount_input != "" {
                             if self.custom_amount_msats < min_amt {
@@ -353,7 +353,7 @@ struct PayView: View {
                     Text("\(render_amount_msats(amt))")
                         .font(.title)
                 } else {
-                    InputView {
+                    AmountInput(text: $custom_amount_input) {
                         handle_custom_receive($0)
                     }
                 }
@@ -363,25 +363,6 @@ struct PayView: View {
                     .font(.title)
             }
         }
-    }
-
-    func InputView(onReceive: @escaping (String) -> ()) -> some View {
-        // TODO remove from class, pass input binding?
-        return Form {
-            Section {
-                HStack(alignment: .lastTextBaseline) {
-                    TextField("10,000", text: $custom_amount_input)
-                        .font(.title)
-                        .keyboardType(.numberPad)
-                        .multilineTextAlignment(.trailing)
-                        .onReceive(Just(self.custom_amount_input)) {
-                            onReceive($0)
-                        }
-                    Text("sats")
-                }
-            }
-        }
-        .frame(height: 100)
     }
 
     func confirm_pay(ln: LNSocket?, inv: String, pay_amt: PayAmount?) {

@@ -11,6 +11,9 @@
 		4C035A0427AEFD2F00FF92CE /* Invoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C035A0327AEFD2F00FF92CE /* Invoice.swift */; };
 		4C3DC97127D4829A00773021 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3DC97027D4829A00773021 /* SettingsView.swift */; };
 		4C4D7A5627DD84BA005A4F7F /* LNUrl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C4D7A5527DD84BA005A4F7F /* LNUrl.swift */; };
+		4C5EAC5427ED30A8002A6FE5 /* Rates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5EAC5327ED30A8002A6FE5 /* Rates.swift */; };
+		4C5EAC5627EE8544002A6FE5 /* ReceiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5EAC5527EE8544002A6FE5 /* ReceiveView.swift */; };
+		4C5EAC5827EE8942002A6FE5 /* AmountInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5EAC5727EE8942002A6FE5 /* AmountInputView.swift */; };
 		4C641D192788FF2F002A36C9 /* lightninglinkApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C641D182788FF2F002A36C9 /* lightninglinkApp.swift */; };
 		4C641D1B2788FF2F002A36C9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C641D1A2788FF2F002A36C9 /* ContentView.swift */; };
 		4C641D1D2788FF30002A36C9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C641D1C2788FF30002A36C9 /* Assets.xcassets */; };
@@ -55,6 +58,9 @@
 		4C035A0327AEFD2F00FF92CE /* Invoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Invoice.swift; sourceTree = "<group>"; };
 		4C3DC97027D4829A00773021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		4C4D7A5527DD84BA005A4F7F /* LNUrl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNUrl.swift; sourceTree = "<group>"; };
+		4C5EAC5327ED30A8002A6FE5 /* Rates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rates.swift; sourceTree = "<group>"; };
+		4C5EAC5527EE8544002A6FE5 /* ReceiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiveView.swift; sourceTree = "<group>"; };
+		4C5EAC5727EE8942002A6FE5 /* AmountInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmountInputView.swift; sourceTree = "<group>"; };
 		4C641D152788FF2F002A36C9 /* lightninglink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lightninglink.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C641D182788FF2F002A36C9 /* lightninglinkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lightninglinkApp.swift; sourceTree = "<group>"; };
 		4C641D1A2788FF2F002A36C9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -149,6 +155,7 @@
 				4C8B289227B44EAF00DF3372 /* LNLink.swift */,
 				4C4D7A5527DD84BA005A4F7F /* LNUrl.swift */,
 				4C72DB2427DD9D9B00834545 /* QR.swift */,
+				4C5EAC5327ED30A8002A6FE5 /* Rates.swift */,
 			);
 			path = lightninglink;
 			sourceTree = "<group>";
@@ -216,6 +223,8 @@
 				4C641D1A2788FF2F002A36C9 /* ContentView.swift */,
 				4CCB0E2A27CA71CA0026461C /* SetupView.swift */,
 				4C3DC97027D4829A00773021 /* SettingsView.swift */,
+				4C5EAC5527EE8544002A6FE5 /* ReceiveView.swift */,
+				4C5EAC5727EE8942002A6FE5 /* AmountInputView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -351,11 +360,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4C5EAC5827EE8942002A6FE5 /* AmountInputView.swift in Sources */,
 				4C035A0027AEF90000FF92CE /* PayView.swift in Sources */,
 				4C873FD527A6EF3F008C972C /* LNSocket.swift in Sources */,
 				4C641D1B2788FF2F002A36C9 /* ContentView.swift in Sources */,
 				4C8B289327B44EAF00DF3372 /* LNLink.swift in Sources */,
 				4CCB0E2727C979F30026461C /* ScannerCoordinator.swift in Sources */,
+				4C5EAC5427ED30A8002A6FE5 /* Rates.swift in Sources */,
 				4C641D492789083E002A36C9 /* lightninglink.c in Sources */,
 				4CCB0E2627C979F30026461C /* CodeScanner.swift in Sources */,
 				4CCB0E2827C979F30026461C /* ScannerViewController.swift in Sources */,
@@ -364,6 +375,7 @@
 				4C641D192788FF2F002A36C9 /* lightninglinkApp.swift in Sources */,
 				4CCB0E2B27CA71CA0026461C /* SetupView.swift in Sources */,
 				4C873FD727A6F1F5008C972C /* RPC.swift in Sources */,
+				4C5EAC5627EE8544002A6FE5 /* ReceiveView.swift in Sources */,
 				4C3DC97127D4829A00773021 /* SettingsView.swift in Sources */,
 				4C4D7A5627DD84BA005A4F7F /* LNUrl.swift in Sources */,
 			);

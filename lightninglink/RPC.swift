@@ -47,6 +47,10 @@ public struct Channel: Decodable {
     public var channel_total_sat: Int64
 }
 
+public struct InvoiceRes: Decodable {
+    public let bolt11: String
+}
+
 public struct LNUrlPayDecode {
     public let description: String?
     public let longDescription: String?
@@ -348,6 +352,31 @@ public func rpc_getinfo(ln: LNSocket, token: String, timeout: Int32 = default_ti
 {
     let params: Array<String> = []
     return performRpc(ln: ln, operation: "getinfo", authToken: token, timeout_ms: default_timeout, params: params)
+}
+
+public func rpc_invoice(ln: LNSocket, token: String, amount: InvoiceAmount = .any, description: String? = nil, expiry: String? = nil) -> RequestRes<InvoiceRes> {
+
+    let now = Date().timeIntervalSince1970
+    let label = "lnlink-\(now)"
+    let desc = description ?? "lnlink invoice"
+    var params: [String: String] = ["description": desc, "label": label]
+
+    if let exp = expiry {
+        params["expiry"] = exp
+    }
+
+    switch amount {
+    case .amount(let val):
+        params["msatoshi"] = "\(val)msat"
+    case .any:
+        params["msatoshi"] = "any"
+    case .min(let val):
+        params["msatoshi"] = "\(val)msat"
+    case .range(let min, let max):
+        params["msatoshi"] = "\(min)msat"
+    }
+
+    return performRpc(ln: ln, operation: "invoice", authToken: token, timeout_ms: default_timeout, params: params)
 }
 
 public func rpc_pay(ln: LNSocket, token: String, bolt11: String, amount_msat: Int64?) -> RequestRes<Pay>

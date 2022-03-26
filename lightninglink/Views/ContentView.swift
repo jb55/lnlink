@@ -36,6 +36,8 @@ enum ActiveAlert: Identifiable {
 public enum ActiveSheet: Identifiable {
     public var id: String {
         switch self {
+        case .receive:
+            return "receive"
         case .qr:
             return "qrcode"
         case .pay:
@@ -44,6 +46,7 @@ public enum ActiveSheet: Identifiable {
     }
 
     case qr
+    case receive
     case pay(DecodeType)
 }
 
@@ -111,6 +114,10 @@ struct ContentView: View {
         return "-\(render_amount_msats(pay.msatoshi)) (\(render_amount_msats(fee)) fee)"
     }
 
+    func receive_pay() {
+        self.active_sheet = .receive
+    }
+
     func check_pay() {
         guard let decode = get_clipboard_invoice() else {
             self.active_sheet = .qr
@@ -150,7 +157,6 @@ struct ContentView: View {
                     Spacer()
                 }
             }
-            .padding()
 
             Spacer()
             Text("\(format_last_pay())")
@@ -168,13 +174,20 @@ struct ContentView: View {
             Spacer()
 
             HStack {
+                Button(action: receive_pay) {
+                    Label("", systemImage: "arrow.down.circle")
+                }
+                .font(.largeTitle)
+
                 Spacer()
-                Button("Pay", action: check_pay)
-                .font(.title)
-                .buttonStyle(.bordered)
-                .padding()
+
+                Button(action: check_pay) {
+                    Label("", systemImage: "qrcode.viewfinder")
+                }
+                .font(.largeTitle)
             }
         }
+        .padding()
         .alert("Use invoice in clipboard?", isPresented: $has_alert, presenting: active_alert) { alert in
             Button("Use QR") {
                 self.has_alert = false
@@ -203,6 +216,9 @@ struct ContentView: View {
                     }
 
                 }
+
+            case .receive:
+                ReceiveView(lnlink: lnlink)
 
             case .pay(let decode):
                 PayView(decode: decode, lnlink: self.lnlink)
