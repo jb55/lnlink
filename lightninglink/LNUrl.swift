@@ -114,7 +114,8 @@ func decode_data<T: Decodable>(_ data: Data) -> T? {
 }
 
 func lnurl_fetchinvoice(lnurlp: LNUrlPay, amount: Int64, completion: @escaping (Either<LNUrlError, LNUrlPayInvoice>) -> ()) {
-    guard let url = URL(string: lnurlp.callback.absoluteString + "?amount=\(amount)") else {
+    let c = lnurlp.callback.absoluteString.contains("?") ? "&" : "?"
+    guard let url = URL(string: lnurlp.callback.absoluteString + "\(c)amount=\(amount)") else {
         completion(.left(LNUrlError(reason: "Invalid lnurl callback")))
         return
     }
