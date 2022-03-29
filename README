@@ -16,6 +16,11 @@ LNLink is powered by lnsocket, a C library I created to connect to the lightning
 Building
 --------
 
+in root directory:
+
+$ git submodule init
+$ git submodule update
+
 enter lnsocket submodule and type:
 
 $ make ios
