@@ -52,17 +52,15 @@ struct AmountInput: View {
     var body: some View {
         VStack {
             Form {
-                Section {
-                    HStack(alignment: .lastTextBaseline) {
-                        TextField("10,000", text: self.text)
-                            .font(.title)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .onReceive(Just(self.text)) {
-                                amount_msat = onReceive($0.wrappedValue)
-                            }
-                        Text("sats")
-                    }
+                HStack(alignment: .lastTextBaseline) {
+                    TextField("10,000", text: self.text)
+                        .font(.title)
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.trailing)
+                        .onReceive(Just(self.text)) {
+                            amount_msat = onReceive($0.wrappedValue)
+                        }
+                    Text("sats")
                 }
             }
             .frame(height: 100)
