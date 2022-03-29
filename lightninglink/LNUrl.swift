@@ -59,7 +59,7 @@ func decode_bech32(_ str: String) -> Bech32? {
     var m_data: Data? = nil
     var typ: bech32_encoding = BECH32_ENCODING_NONE
 
-    hrp_buf.withMemoryRebound(to: UInt8.self) { hrp_ptr in
+    hrp_buf.withMemoryRebound(to: CChar.self) { hrp_ptr in
     str.withCString { input in
         typ = bech32_decode(hrp_ptr.baseAddress, bits_buf.baseAddress, &bitslen, input, str.count)
         bech32_convert_bits(data_buf.baseAddress, &datalen, 8, bits_buf.baseAddress, bitslen, 5, 0)
