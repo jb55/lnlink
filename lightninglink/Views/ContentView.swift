@@ -85,6 +85,7 @@ struct ContentView: View {
     @State private var funds: Funds = .empty
     @State private var is_reset: Bool = false
     @State private var scan_invoice: String? = nil
+    @State private var rate: ExchangeRate?
 
     private let dashboard: Dashboard
     private let lnlink: LNLink
@@ -221,7 +222,7 @@ struct ContentView: View {
                 ReceiveView(lnlink: lnlink)
 
             case .pay(let decode):
-                PayView(decode: decode, lnlink: self.lnlink)
+                PayView(decode: decode, lnlink: self.lnlink, rate: self.rate)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .sentPayment)) { payment in
@@ -240,6 +241,9 @@ struct ContentView: View {
             handle_scan(url.absoluteString)
         }
         .onAppear() {
+            get_exchange_rate(for_cur: .USD) {
+                self.rate = $0
+            }
             refresh_funds()
             if init_scan_invoice != nil {
                 handle_scan(init_scan_invoice!)

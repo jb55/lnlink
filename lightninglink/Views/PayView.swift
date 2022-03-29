@@ -82,6 +82,7 @@ public enum PayState {
 struct PayView: View {
     let init_decode_type: DecodeType
     let lnlink: LNLink
+    let rate: ExchangeRate?
 
     let expiry_timer = Timer.publish(every: 1, on: .main, in: .default).autoconnect()
 
@@ -97,9 +98,10 @@ struct PayView: View {
 
     @Environment(\.presentationMode) var presentationMode
 
-    init(decode: DecodeType, lnlink: LNLink) {
+    init(decode: DecodeType, lnlink: LNLink, rate: ExchangeRate?) {
         self.init_decode_type = decode
         self.lnlink = lnlink
+        self.rate = rate
     }
 
     var successView: some View {
@@ -230,10 +232,10 @@ struct PayView: View {
         return self.paying || (self.error == nil && is_ready(self.state) == nil)
     }
 
-    func handle_custom_receive(_ new_val: String) {
+    func handle_custom_receive(_ new_val: String) -> Int64? {
         if new_val == "" {
             self.custom_amount_input = ""
-            return
+            return nil
         }
 
         let ok = new_val.allSatisfy { $0 == "," || ($0 >= "0" && $0 <= "9") }
@@ -246,7 +248,10 @@ struct PayView: View {
             let msats = sats * 1000
             self.custom_amount_input = num_fmt.string(from: NSNumber(value: sats)) ?? new_val
             self.custom_amount_msats = msats
+            return msats
         }
+
+        return nil
     }
 
     func tip_percent(_ tip: TipSelection) {
@@ -331,8 +336,8 @@ struct PayView: View {
                     Text("\(render_amount_msats(amt))")
                         .font(.title)
                 } else {
-                    AmountInput(text: $custom_amount_input) {
-                        handle_custom_receive($0)
+                    AmountInput(text: $custom_amount_input, rate: rate) {
+                        let msats = handle_custom_receive($0)
                         if self.custom_amount_input != "" {
                             if self.custom_amount_msats < min_amt {
                                 self.error = "Amount not allowed, must be higher than \(render_amount_msats(min_amt))"
@@ -344,6 +349,7 @@ struct PayView: View {
                                 }
                             }
                         }
+                        return msats
                     }
                 }
 
@@ -353,7 +359,7 @@ struct PayView: View {
                     Text("\(render_amount_msats(amt))")
                         .font(.title)
                 } else {
-                    AmountInput(text: $custom_amount_input) {
+                    AmountInput(text: $custom_amount_input, rate: rate) {
                         handle_custom_receive($0)
                     }
                 }
@@ -464,6 +470,9 @@ struct PayView: View {
     }
 
     func handle_confirm(ln mln: LNSocket?) {
+        // clear last error on confirm
+        self.error = nil
+
         switch self.state {
         case .invoice_request(let reqinv):
             switch reqinv {

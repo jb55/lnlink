@@ -372,7 +372,7 @@ public func rpc_invoice(ln: LNSocket, token: String, amount: InvoiceAmount = .an
         params["msatoshi"] = "any"
     case .min(let val):
         params["msatoshi"] = "\(val)msat"
-    case .range(let min, let max):
+    case .range(let min, _):
         params["msatoshi"] = "\(min)msat"
     }
 

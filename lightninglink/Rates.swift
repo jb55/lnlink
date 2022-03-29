@@ -7,16 +7,9 @@
 
 import Foundation
 
-enum Currency: CustomStringConvertible {
+enum Currency: String {
     case USD
     case CAD
-
-    var description: String {
-        switch self {
-        case .USD: return "USD"
-        case .CAD: return "CAD"
-        }
-    }
 }
 
 enum StringNum: Decodable {
@@ -27,6 +20,7 @@ enum StringNum: Decodable {
         let value = try decoder.singleValueContainer()
         if let str = try? value.decode(String.self) {
             self = .string(str)
+            return
         }
 
         self = .number(try value.decode(Double.self))
@@ -39,7 +33,7 @@ struct ExchangeRate {
 }
 
 func get_exchange_rate(for_cur: Currency, cb: @escaping (ExchangeRate?) -> ()) {
-    let url = URL(string: "https://api-pub.bitfinex.com/v2/tickers?=symbols=tBTC\(for_cur)")!
+    let url = URL(string: "https://api-pub.bitfinex.com/v2/tickers?symbols=tBTC\(for_cur)")!
     let task = URLSession.shared.dataTask(with: url) { (mdata, response, error) in
         guard let data = mdata else {
             cb(nil)
@@ -70,7 +64,7 @@ func decode_bitfinex_exchange_rate(_ data: Data) -> Double? {
     case .string:
         return nil
     case .number(let xr):
-        return xr
+        return Double(xr)
     }
 }
 
