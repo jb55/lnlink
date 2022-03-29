@@ -12,6 +12,7 @@ Get the TestFlight:
 LNLink is powered by lnsocket, a C library I created to connect to the lightning network:
 
 	http://git.jb55.com/lnsocket
+	https://github.com/jb55/lnsocket
 
 Building
 --------
