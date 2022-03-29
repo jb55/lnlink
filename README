@@ -18,8 +18,7 @@ Building
 
 in root directory:
 
-$ git submodule init
-$ git submodule update
+$ git submodule update --init --recursive
 
 enter lnsocket submodule and type:
 
