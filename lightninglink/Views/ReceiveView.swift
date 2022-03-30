@@ -8,15 +8,31 @@
 import SwiftUI
 import AVFoundation
 import CoreImage.CIFilterBuiltins
+import Combine
+
+struct QRData {
+    let img: Image
+    let data: String
+}
 
 struct ReceiveView: View {
     @State private var loading: Bool = true
-    @State private var qr: Image? = nil
-    @State private var qr_data: String? = nil
+    @State private var qr_data: QRData? = nil
+    @State private var description: String = ""
+    @State private var amount: Int64? = nil
+    @State private var amount_str: String = ""
+    @State private var making: Bool = false
+    @FocusState private var is_kb_focused: Bool
 
     let lnlink: LNLink
+    let rate: ExchangeRate?
 
     @Environment(\.presentationMode) var presentationMode
+
+    var form: some View {
+            ProgressView()
+                .progressViewStyle(.circular)
+    }
 
     var body: some View {
         VStack {
@@ -25,40 +41,78 @@ struct ReceiveView: View {
 
             Spacer()
 
-            if let qr = self.qr {
-                qr
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 300, height: 300)
-                    .onTapGesture {
-                        AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
-                        UIPasteboard.general.string = self.qr_data
-                    }
+            if let qr = self.qr_data {
+                qrcode_view(qr)
             } else {
-                ProgressView()
-                    .progressViewStyle(.circular)
+                if making {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                } else {
+                    Form {
+                        TextField("Description", text: $description)
+                            .font(.body)
+                            .focused($is_kb_focused)
+
+                        Section {
+                            AmountInput(text: $amount_str, placeholder: "any") { parsed in
+                                if let str = parsed.msats_str {
+                                    self.amount_str = str
+                                }
+                                if let msats = parsed.msats {
+                                    self.amount = msats
+                                }
+                            }
+                            .focused($is_kb_focused)
+
+                        }
+
+                    }
+                    .frame(height: 200)
+
+                    if self.amount_str != "", let msats = self.amount {
+                        if let rate = self.rate {
+                            Text("\(sats_to_fiat(msats: msats, xr: rate))")
+                                .foregroundColor(.gray)
+                        }
+                    }
+
+                }
             }
 
             Spacer()
 
             HStack {
-                Button("Back") {
-                    dismiss()
+                if !is_kb_focused {
+                    Button("Back") {
+                        dismiss()
+                    }
+
                 }
+
                 Spacer()
+
+                if !self.making && self.qr_data == nil {
+                    Button("Receive") {
+                        self.making = true
+                        make_invoice(lnlink: lnlink, expiry: "12h", description: self.description, amount: self.amount) { res in
+                            self.making = false
+                            switch res {
+                            case .failure:
+                                break
+                            case .success(let invres):
+                                let img = generate_qr(from: invres.bolt11)
+                                self.qr_data = QRData(img: img, data: invres.bolt11)
+                            }
+                        }
+                    }
+                    .font(.title)
+                }
             }
         }
         .padding()
-        .onAppear() {
-            make_invoice(lnlink: lnlink, expiry: "12h") { res in
-                switch res {
-                case .failure:
-                    break
-                case .success(let invres):
-                    self.qr = generate_qr(from: invres.bolt11)
-                    self.qr_data = invres.bolt11
-                }
-            }
+        .onTapGesture {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                to: nil, from: nil, for: nil)
         }
     }
 
@@ -85,7 +139,7 @@ func generate_qr(from string: String) -> Image {
     return Image(uiImage: uiimg)
 }
 
-func make_invoice(lnlink: LNLink, expiry: String, callback: @escaping (RequestRes<InvoiceRes>) -> ()) {
+func make_invoice(lnlink: LNLink, expiry: String, description: String?, amount: Int64?, callback: @escaping (RequestRes<InvoiceRes>) -> ()) {
     let ln = LNSocket()
 
     ln.genkey()
@@ -93,8 +147,24 @@ func make_invoice(lnlink: LNLink, expiry: String, callback: @escaping (RequestRe
         return
     }
 
+
     DispatchQueue.global(qos: .background).async {
-        let res = rpc_invoice(ln: ln, token: lnlink.token, amount: .any, description: "lnlink invoice", expiry: "12h")
+        var amt: InvoiceAmount = .any
+        if let a = amount {
+            amt = .amount(a)
+        }
+        let res = rpc_invoice(ln: ln, token: lnlink.token, amount: amt, description:  description ?? "lnlink invoice", expiry: "12h")
         callback(res)
     }
+}
+
+func qrcode_view(_ qrd: QRData) -> some View {
+    qrd.img
+        .resizable()
+        .scaledToFit()
+        .frame(width: 300, height: 300)
+        .onTapGesture {
+            AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
+            UIPasteboard.general.string = qrd.data
+        }
 }

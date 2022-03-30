@@ -219,7 +219,7 @@ struct ContentView: View {
                 }
 
             case .receive:
-                ReceiveView(lnlink: lnlink)
+                ReceiveView(lnlink: lnlink, rate: self.rate)
 
             case .pay(let decode):
                 PayView(decode: decode, lnlink: self.lnlink, rate: self.rate)

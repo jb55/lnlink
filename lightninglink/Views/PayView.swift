@@ -79,6 +79,8 @@ public enum PayState {
     case invoice_request(RequestInvoice)
 }
 
+let default_placeholder = "10,000"
+
 struct PayView: View {
     let init_decode_type: DecodeType
     let lnlink: LNLink
@@ -97,6 +99,7 @@ struct PayView: View {
     @State var paying: Bool = false
 
     @Environment(\.presentationMode) var presentationMode
+    @Environment (\.colorScheme) var colorScheme: ColorScheme
 
     init(decode: DecodeType, lnlink: LNLink, rate: ExchangeRate?) {
         self.init_decode_type = decode
@@ -232,28 +235,6 @@ struct PayView: View {
         return self.paying || (self.error == nil && is_ready(self.state) == nil)
     }
 
-    func handle_custom_receive(_ new_val: String) -> Int64? {
-        if new_val == "" {
-            self.custom_amount_input = ""
-            return nil
-        }
-
-        let ok = new_val.allSatisfy { $0 == "," || ($0 >= "0" && $0 <= "9") }
-        if ok {
-            let num_fmt = NumberFormatter()
-            num_fmt.numberStyle = .decimal
-
-            let filtered = new_val.filter { $0 >= "0" && $0 <= "9" }
-            let sats = Int64(filtered) ?? 0
-            let msats = sats * 1000
-            self.custom_amount_input = num_fmt.string(from: NSNumber(value: sats)) ?? new_val
-            self.custom_amount_msats = msats
-            return msats
-        }
-
-        return nil
-    }
-
     func tip_percent(_ tip: TipSelection) {
         if tip == self.current_tip {
             self.current_tip = .none
@@ -336,8 +317,14 @@ struct PayView: View {
                     Text("\(render_amount_msats(amt))")
                         .font(.title)
                 } else {
-                    AmountInput(text: $custom_amount_input, rate: rate) {
-                        let msats = handle_custom_receive($0)
+                    AmountInput(text: $custom_amount_input, placeholder: default_placeholder) { result in
+                        if let str = result.msats_str {
+                            self.custom_amount_input = str
+                        }
+                        if let msats = result.msats {
+                            self.custom_amount_msats = msats
+                        }
+
                         if self.custom_amount_input != "" {
                             if self.custom_amount_msats < min_amt {
                                 self.error = "Amount not allowed, must be higher than \(render_amount_msats(min_amt))"
@@ -349,7 +336,6 @@ struct PayView: View {
                                 }
                             }
                         }
-                        return msats
                     }
                 }
 
@@ -359,14 +345,29 @@ struct PayView: View {
                     Text("\(render_amount_msats(amt))")
                         .font(.title)
                 } else {
-                    AmountInput(text: $custom_amount_input, rate: rate) {
-                        handle_custom_receive($0)
+                    Form {
+                        AmountInput(text: $custom_amount_input, placeholder: default_placeholder) { parsed in
+                            if let str = parsed.msats_str {
+                                self.custom_amount_input = str
+                            }
+                            if let msats = parsed.msats {
+                                self.custom_amount_msats = msats
+                            }
+                        }
                     }
+                    .frame(height: 100)
                 }
 
             case .amount(let amt):
                 Text("\(render_amount_msats(amt))")
                     .font(.title)
+            }
+
+            if self.custom_amount_input != "", let msats = self.custom_amount_msats {
+                if let rate = self.rate {
+                    Text("\(sats_to_fiat(msats: msats, xr: rate))")
+                        .foregroundColor(.gray)
+                }
             }
         }
     }

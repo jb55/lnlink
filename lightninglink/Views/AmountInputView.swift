@@ -43,37 +43,39 @@ func get_preferred_denominations() -> [Denomination] {
     return [.bitcoin(btc_pref), .fiat(fiat_pref)]
 }
 
+struct ParsedAmount {
+    let msats_str: String?
+    let msats: Int64?
+
+    static var empty: ParsedAmount {
+        ParsedAmount(msats_str: nil, msats: nil)
+    }
+}
+
 struct AmountInput: View {
     @State var amount_msat: Int64? = nil
     let text: Binding<String>
-    let rate: ExchangeRate?
-    let onReceive: (String) -> Int64?
+    let placeholder: String
+    let onReceive: (ParsedAmount) -> ()
 
     var body: some View {
         VStack {
-            Form {
-                HStack(alignment: .lastTextBaseline) {
-                    TextField("10,000", text: self.text)
-                        .font(.title)
-                        .keyboardType(.numberPad)
-                        .multilineTextAlignment(.trailing)
-                        .onReceive(Just(self.text)) {
-                            amount_msat = onReceive($0.wrappedValue)
-                        }
-                    Text("sats")
-                }
+            HStack(alignment: .lastTextBaseline) {
+                TextField(placeholder, text: self.text)
+                    .font(.title)
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.trailing)
+                    .onReceive(Just(self.text)) {
+                        onReceive(parse_msat_input($0.wrappedValue))
+                    }
+                Text("sats")
             }
-            .frame(height: 100)
 
-            if let msats = amount_msat {
-                if let rate = self.rate {
-                    Text("about \(sats_to_fiat(msats: msats, xr: rate))")
-                        .foregroundColor(.gray)
-                }
-            }
         }
     }
 }
+
+
 
 func sats_to_fiat(msats: Int64, xr: ExchangeRate) -> String {
     let btc = Double(msats) / Double(100_000_000_000)
@@ -81,4 +83,24 @@ func sats_to_fiat(msats: Int64, xr: ExchangeRate) -> String {
     return String(format: "%.2f \(xr.currency)", rate)
 }
 
+
+func parse_msat_input(_ new_val: String) -> ParsedAmount {
+    if new_val == "" {
+        return ParsedAmount(msats_str: "", msats: nil)
+    }
+
+    let ok = new_val.allSatisfy { $0 == "," || ($0 >= "0" && $0 <= "9") }
+    if ok {
+        let num_fmt = NumberFormatter()
+        num_fmt.numberStyle = .decimal
+
+        let filtered = new_val.filter { $0 >= "0" && $0 <= "9" }
+        let sats = Int64(filtered) ?? 0
+        let msats = sats * 1000
+        let ret = num_fmt.string(from: NSNumber(value: sats)) ?? new_val
+        return ParsedAmount(msats_str: ret, msats: msats)
+    }
+
+    return .empty
+}
 
