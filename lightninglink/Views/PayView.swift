@@ -301,11 +301,12 @@ struct PayView: View {
 
             switch amt {
             case .min(let min_amt):
-                Text("\(render_amount_msats(min_amt + self.custom_amount_msats))")
-                    .font(.title)
+                amount_view(min_amt + self.custom_amount_msats)
+
                 Text("\(render_amount_msats(self.custom_amount_msats)) tipped")
                     .font(.callout)
                     .foregroundColor(.gray)
+
                 if !self.paying {
                     Spacer()
                     tip_view()
@@ -314,8 +315,7 @@ struct PayView: View {
             case .range(let min_amt, let max_amt):
                 if self.paying {
                     let amt = self.custom_amount_msats
-                    Text("\(render_amount_msats(amt))")
-                        .font(.title)
+                    amount_view(amt)
                 } else {
                     AmountInput(text: $custom_amount_input, placeholder: default_placeholder) { result in
                         if let str = result.msats_str {
@@ -342,8 +342,7 @@ struct PayView: View {
             case .any:
                 if self.paying {
                     let amt = self.custom_amount_msats
-                    Text("\(render_amount_msats(amt))")
-                        .font(.title)
+                    amount_view(amt)
                 } else {
                     Form {
                         AmountInput(text: $custom_amount_input, placeholder: default_placeholder) { parsed in
@@ -359,8 +358,7 @@ struct PayView: View {
                 }
 
             case .amount(let amt):
-                Text("\(render_amount_msats(amt))")
-                    .font(.title)
+                amount_view(amt)
             }
 
             if self.custom_amount_input != "", let msats = self.custom_amount_msats {
@@ -742,17 +740,22 @@ func render_amount(_ amt: InvoiceAmount) -> String {
     }
 }
 
-func render_amount_msats(_ amount: Int64) -> String {
+func render_amount_msats_sep(_ amount: Int64) -> (String, String) {
     let formatter = NumberFormatter()
     formatter.numberStyle = .decimal
 
     if amount < 1000 {
         let amt_str = formatter.string(from: NSNumber(value: amount))!
-        return "\(amt_str) msats"
+        return (amt_str, amount == 1 ? "msat" : "msats")
     }
 
     let amt_str = formatter.string(from: NSNumber(value: amount / 1000))!
-    return "\(amt_str) sats"
+    return (amt_str, (amount/1000) == 1 ? "sat" : "sats")
+}
+
+func render_amount_msats(_ amount: Int64) -> String {
+    let res = render_amount_msats_sep(amount)
+    return "\(res.0) \(res.1)"
 }
 
 /*
@@ -863,3 +866,14 @@ func pay_amount_matches(pay_amt: PayAmount, invoice_amount: InvoiceAmount) -> Bo
     return false
 }
 
+
+
+func amount_view(_ msats: Int64) -> some View {
+    HStack {
+        let sep = render_amount_msats_sep(msats)
+        Text(sep.0)
+            .font(.largeTitle.bold())
+        Text(sep.1)
+            .font(.title)
+    }
+}

@@ -62,13 +62,14 @@ struct AmountInput: View {
         VStack {
             HStack(alignment: .lastTextBaseline) {
                 TextField(placeholder, text: self.text)
-                    .font(.title)
+                    .font(.largeTitle.bold())
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.trailing)
                     .onReceive(Just(self.text)) {
                         onReceive(parse_msat_input($0.wrappedValue))
                     }
                 Text("sats")
+                    .font(.subheadline)
             }
 
         }
