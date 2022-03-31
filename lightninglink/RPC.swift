@@ -51,6 +51,10 @@ public struct InvoiceRes: Decodable {
     public let bolt11: String
 }
 
+public struct OfferRes: Decodable {
+    public let bolt12: String
+}
+
 public struct LNUrlPayDecode {
     public let description: String?
     public let longDescription: String?
@@ -352,6 +356,31 @@ public func rpc_getinfo(ln: LNSocket, token: String, timeout: Int32 = default_ti
 {
     let params: Array<String> = []
     return performRpc(ln: ln, operation: "getinfo", authToken: token, timeout_ms: default_timeout, params: params)
+}
+
+public func rpc_offer(ln: LNSocket, token: String, amount: InvoiceAmount = .any, description: String? = nil, issuer: String? = nil) -> RequestRes<OfferRes> {
+
+    let now = Date().timeIntervalSince1970
+    let label = "lnlink-\(now)"
+    let desc = description ?? "lnlink offer"
+    var params: [String: String] = ["description": desc, "label": label]
+
+    if let issuer = issuer {
+        params["issuer"] = issuer
+    }
+
+    switch amount {
+    case .amount(let val):
+        params["amount"] = "\(val)msat"
+    case .any:
+        params["amount"] = "any"
+    case .min(let val):
+        params["amount"] = "\(val)msat"
+    case .range(let min, _):
+        params["amount"] = "\(min)msat"
+    }
+
+    return performRpc(ln: ln, operation: "offer", authToken: token, timeout_ms: default_timeout, params: params)
 }
 
 public func rpc_invoice(ln: LNSocket, token: String, amount: InvoiceAmount = .any, description: String? = nil, expiry: String? = nil) -> RequestRes<InvoiceRes> {

@@ -19,9 +19,11 @@ struct ReceiveView: View {
     @State private var loading: Bool = true
     @State private var qr_data: QRData? = nil
     @State private var description: String = ""
+    @State private var issuer: String = ""
     @State private var amount: Int64? = nil
     @State private var amount_str: String = ""
     @State private var making: Bool = false
+    @State private var is_offer: Bool = false
     @FocusState private var is_kb_focused: Bool
     @Binding var rate: ExchangeRate?
 
@@ -34,6 +36,48 @@ struct ReceiveView: View {
                 .progressViewStyle(.circular)
     }
 
+    func invoice_details_form() -> some View {
+        Group {
+            Form {
+                Section(header: Text("Invoice Details")) {
+                    Toggle("Offer (bolt12)", isOn: $is_offer)
+                        .padding()
+
+                    TextField("Description", text: $description)
+                        .font(.body)
+                        .focused($is_kb_focused)
+                        .padding()
+
+                    if self.is_offer {
+                        TextField("Issuer", text: $issuer)
+                            .font(.body)
+                            .focused($is_kb_focused)
+                            .padding()
+                    }
+
+                    AmountInput(text: $amount_str, placeholder: "any") { parsed in
+                        if let str = parsed.msats_str {
+                            self.amount_str = str
+                        }
+                        if let msats = parsed.msats {
+                            self.amount = msats
+                        }
+                    }
+                    .padding()
+                    .focused($is_kb_focused)
+                }
+            }
+            .frame(height: 350)
+
+            if self.amount_str != "", let msats = self.amount {
+                if let rate = self.rate {
+                    Text("\(msats_to_fiat(msats: msats, xr: rate))")
+                        .foregroundColor(.gray)
+                }
+            }
+        }
+    }
+
     var body: some View {
         VStack {
             Text("Receive payment")
@@ -42,40 +86,13 @@ struct ReceiveView: View {
             Spacer()
 
             if let qr = self.qr_data {
-                qrcode_view(qr)
+                QRCodeView(qr: qr)
             } else {
                 if making {
                     ProgressView()
                         .progressViewStyle(.circular)
                 } else {
-                    Form {
-                        TextField("Description", text: $description)
-                            .font(.body)
-                            .focused($is_kb_focused)
-
-                        Section {
-                            AmountInput(text: $amount_str, placeholder: "any") { parsed in
-                                if let str = parsed.msats_str {
-                                    self.amount_str = str
-                                }
-                                if let msats = parsed.msats {
-                                    self.amount = msats
-                                }
-                            }
-                            .focused($is_kb_focused)
-
-                        }
-
-                    }
-                    .frame(height: 200)
-
-                    if self.amount_str != "", let msats = self.amount {
-                        if let rate = self.rate {
-                            Text("\(msats_to_fiat(msats: msats, xr: rate))")
-                                .foregroundColor(.gray)
-                        }
-                    }
-
+                    invoice_details_form()
                 }
             }
 
@@ -97,14 +114,16 @@ struct ReceiveView: View {
                 if !self.making && self.qr_data == nil {
                     Button("Receive") {
                         self.making = true
-                        make_invoice(lnlink: lnlink, expiry: "12h", description: self.description, amount: self.amount) { res in
-                            self.making = false
+                        make_invoice(lnlink: lnlink, expiry: "12h", description: self.description, amount: self.amount, issuer: self.issuer, is_offer: self.is_offer) { res in
                             switch res {
                             case .failure:
+                                self.making = false
                                 break
                             case .success(let invres):
-                                let img = generate_qr(from: invres.bolt11)
-                                self.qr_data = QRData(img: img, data: invres.bolt11)
+                                let upper = invres.uppercased()
+                                let img = generate_qr(from: upper)
+                                self.making = false
+                                self.qr_data = QRData(img: img, data: upper)
                             }
                         }
                     }
@@ -143,7 +162,7 @@ func generate_qr(from string: String) -> Image {
     return Image(uiImage: uiimg)
 }
 
-func make_invoice(lnlink: LNLink, expiry: String, description: String?, amount: Int64?, callback: @escaping (RequestRes<InvoiceRes>) -> ()) {
+func make_invoice(lnlink: LNLink, expiry: String, description: String?, amount: Int64?, issuer: String?, is_offer: Bool, callback: @escaping (RequestRes<String>) -> ()) {
     let ln = LNSocket()
 
     ln.genkey()
@@ -151,24 +170,45 @@ func make_invoice(lnlink: LNLink, expiry: String, description: String?, amount: 
         return
     }
 
-
     DispatchQueue.global(qos: .background).async {
         var amt: InvoiceAmount = .any
         if let a = amount {
             amt = .amount(a)
         }
-        let res = rpc_invoice(ln: ln, token: lnlink.token, amount: amt, description:  description ?? "lnlink invoice", expiry: "12h")
-        callback(res)
+
+        let desc = description ?? "lnlink invoice"
+        let expiry = "12h"
+        if is_offer {
+            let res = rpc_offer(ln: ln, token: lnlink.token, amount: amt, description: desc, issuer: issuer)
+            callback(res.map{ $0.bolt12 })
+        } else {
+            let res = rpc_invoice(ln: ln, token: lnlink.token, amount: amt, description: desc, expiry: expiry)
+            callback(res.map{ $0.bolt11 })
+        }
     }
 }
 
-func qrcode_view(_ qrd: QRData) -> some View {
-    qrd.img
-        .resizable()
-        .scaledToFit()
-        .frame(width: 300, height: 300)
-        .onTapGesture {
-            AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
-            UIPasteboard.general.string = qrd.data
+struct QRCodeView: View {
+    let qr: QRData
+    @State var copied: Bool = false
+
+    var body: some View {
+        Group {
+            qr.img
+                .resizable()
+                .scaledToFit()
+                .frame(width: 300, height: 300)
+                .onTapGesture {
+                    AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
+                    UIPasteboard.general.string = self.qr.data
+                    copied = true
+                }
+
+            Text("\(!copied ? "Tap QR to copy invoice" : "Copied!")")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+
         }
+
+    }
 }
