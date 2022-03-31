@@ -81,9 +81,8 @@ func msats_to_fiat(msats: Int64, xr: ExchangeRate) -> String {
     let btc = Double(msats) / Double(100_000_000_000)
     let rate = xr.rate * btc
     let num_fmt = NumberFormatter()
-    num_fmt.numberStyle = .decimal
-    let fmt = num_fmt.string(from: NSNumber(value: round(rate * 100) / 100.0))!
-    return "$\(fmt)"
+    num_fmt.numberStyle = .currency
+    return num_fmt.string(from: NSNumber(value: round(rate * 100) / 100.0))!
 }
 
 
