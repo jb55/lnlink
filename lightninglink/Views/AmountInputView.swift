@@ -76,11 +76,13 @@ struct AmountInput: View {
 }
 
 
-
-func sats_to_fiat(msats: Int64, xr: ExchangeRate) -> String {
+func msats_to_fiat(msats: Int64, xr: ExchangeRate) -> String {
     let btc = Double(msats) / Double(100_000_000_000)
     let rate = xr.rate * btc
-    return String(format: "%.2f \(xr.currency)", rate)
+    let num_fmt = NumberFormatter()
+    num_fmt.numberStyle = .decimal
+    let fmt = num_fmt.string(from: NSNumber(value: round(rate * 100) / 100.0))!
+    return "$\(fmt)"
 }
 
 

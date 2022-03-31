@@ -23,9 +23,9 @@ struct ReceiveView: View {
     @State private var amount_str: String = ""
     @State private var making: Bool = false
     @FocusState private var is_kb_focused: Bool
+    @Binding var rate: ExchangeRate?
 
     let lnlink: LNLink
-    let rate: ExchangeRate?
 
     @Environment(\.presentationMode) var presentationMode
 
@@ -71,7 +71,7 @@ struct ReceiveView: View {
 
                     if self.amount_str != "", let msats = self.amount {
                         if let rate = self.rate {
-                            Text("\(sats_to_fiat(msats: msats, xr: rate))")
+                            Text("\(msats_to_fiat(msats: msats, xr: rate))")
                                 .foregroundColor(.gray)
                         }
                     }
