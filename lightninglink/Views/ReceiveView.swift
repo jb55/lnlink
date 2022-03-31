@@ -86,7 +86,10 @@ struct ReceiveView: View {
                     Button("Back") {
                         dismiss()
                     }
-
+                } else {
+                    Button("Close") {
+                        close_keyboard()
+                    }
                 }
 
                 Spacer()
@@ -110,10 +113,11 @@ struct ReceiveView: View {
             }
         }
         .padding()
-        .onTapGesture {
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+    }
+
+    private func close_keyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                                 to: nil, from: nil, for: nil)
-        }
     }
 
     private func dismiss() {
