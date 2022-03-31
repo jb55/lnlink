@@ -143,7 +143,7 @@ struct PayView: View {
     }
 
     func MainView() -> some View {
-        return VStack {
+        return VStack(alignment: .hcentered) {
             Text("Confirm Payment")
                 .font(.largeTitle)
                 .padding()
@@ -875,6 +875,9 @@ func amount_view(_ msats: Int64, rate mrate: ExchangeRate?) -> some View {
             Text(sep.0)
                 .font(.largeTitle)
                 .fontWeight(.bold)
+                .alignmentGuide(.hcentered) {
+                    $0.width / 2.0
+                }
 
             Text(sep.1)
                 .font(.subheadline)
@@ -886,4 +889,13 @@ func amount_view(_ msats: Int64, rate mrate: ExchangeRate?) -> some View {
                 .foregroundColor(.gray)
         }
     }
+}
+
+extension HorizontalAlignment {
+   private enum HCenterAlignment: AlignmentID {
+      static func defaultValue(in dimensions: ViewDimensions) -> CGFloat {
+         return dimensions[HorizontalAlignment.center]
+      }
+   }
+   static let hcentered = HorizontalAlignment(HCenterAlignment.self)
 }

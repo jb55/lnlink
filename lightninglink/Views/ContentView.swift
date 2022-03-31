@@ -133,8 +133,8 @@ struct ContentView: View {
 
     func main_content() -> some View {
         NavigationView {
-        VStack {
-            VStack {
+        VStack(alignment: .hcentered) {
+            VStack{
                 HStack {
                     VStack {
                     Text(self.dashboard.info.alias)
