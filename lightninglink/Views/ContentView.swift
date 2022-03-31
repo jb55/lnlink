@@ -163,20 +163,7 @@ struct ContentView: View {
             Text("\(format_last_pay())")
                 .foregroundColor(Color.red)
 
-            HStack {
-                Text("\(self.funds.channel_sats)")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
-                Text("sats")
-                    .font(.subheadline)
-            }
-
-            if let rate = self.rate {
-                Text("\(msats_to_fiat(msats: self.funds.channel_sats * 1000, xr: rate))")
-                    .font(.footnote)
-                    .foregroundColor(.gray)
-            }
+            amount_view(self.funds.channel_sats * 1000, rate: self.rate)
 
             if self.funds.onchain_sats != 0 {
                 Text("\(self.funds.onchain_sats) onchain")

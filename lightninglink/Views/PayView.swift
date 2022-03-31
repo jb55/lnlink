@@ -301,7 +301,7 @@ struct PayView: View {
 
             switch amt {
             case .min(let min_amt):
-                amount_view(min_amt + self.custom_amount_msats)
+                amount_view(min_amt + self.custom_amount_msats, rate: self.rate)
 
                 Text("\(render_amount_msats(self.custom_amount_msats)) tipped")
                     .font(.callout)
@@ -315,7 +315,7 @@ struct PayView: View {
             case .range(let min_amt, let max_amt):
                 if self.paying {
                     let amt = self.custom_amount_msats
-                    amount_view(amt)
+                    amount_view(amt, rate: self.rate)
                 } else {
                     AmountInput(text: $custom_amount_input, placeholder: default_placeholder) { result in
                         if let str = result.msats_str {
@@ -342,7 +342,7 @@ struct PayView: View {
             case .any:
                 if self.paying {
                     let amt = self.custom_amount_msats
-                    amount_view(amt)
+                    amount_view(amt, rate: self.rate)
                 } else {
                     Form {
                         AmountInput(text: $custom_amount_input, placeholder: default_placeholder) { parsed in
@@ -358,7 +358,7 @@ struct PayView: View {
                 }
 
             case .amount(let amt):
-                amount_view(amt)
+                amount_view(amt, rate: self.rate)
             }
 
             if self.custom_amount_input != "", let msats = self.custom_amount_msats {
@@ -868,12 +868,22 @@ func pay_amount_matches(pay_amt: PayAmount, invoice_amount: InvoiceAmount) -> Bo
 
 
 
-func amount_view(_ msats: Int64) -> some View {
-    HStack {
-        let sep = render_amount_msats_sep(msats)
-        Text(sep.0)
-            .font(.largeTitle.bold())
-        Text(sep.1)
-            .font(.title)
+func amount_view(_ msats: Int64, rate mrate: ExchangeRate?) -> some View {
+    Group {
+        HStack {
+            let sep = render_amount_msats_sep(msats)
+            Text(sep.0)
+                .font(.largeTitle)
+                .fontWeight(.bold)
+
+            Text(sep.1)
+                .font(.subheadline)
+        }
+
+        if let rate = mrate {
+            Text("\(msats_to_fiat(msats: msats, xr: rate))")
+                .font(.footnote)
+                .foregroundColor(.gray)
+        }
     }
 }
