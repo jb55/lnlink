@@ -361,7 +361,7 @@ struct PayView: View {
                 amount_view(amt, rate: self.rate)
             }
 
-            if self.custom_amount_input != "", let msats = self.custom_amount_msats {
+            if !self.paying && self.custom_amount_input != "", let msats = self.custom_amount_msats {
                 if let rate = self.rate {
                     Text("\(msats_to_fiat(msats: msats, xr: rate))")
                         .foregroundColor(.gray)
