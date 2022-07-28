@@ -64,6 +64,12 @@ public class LNSocket {
 
         return (msgtype, data)
     }
+    
+    func pong(ping: Data) {
+        ping.withUnsafeBytes{ ping_ptr in
+            lnsocket_pong(self.ln, ping_ptr, UInt16(ping.count))
+        }
+    }
 
     func perform_init() -> Bool {
         return lnsocket_perform_init(self.ln) != 0

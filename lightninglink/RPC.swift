@@ -340,6 +340,9 @@ func commando_read_all(ln: LNSocket, timeout_ms: Int32 = 2000) -> RequestRes<Dat
         } else if msgtype == COMMANDO_REPLY_CONTINUES {
             all_data.append(data[8...])
             continue
+        } else if msgtype == WIRE_PING.rawValue {
+            // respond to pings for long requests like waitinvoice, etc
+            ln.pong(ping: data)
         } else {
             //return .failure(RequestError(errorType: .badCommandoMsgType(Int(msgtype))))
             // we could get random messages like channel update! just ignore them
