@@ -408,13 +408,13 @@ public func rpc_invoice(ln: LNSocket, token: String, amount: InvoiceAmount = .an
     return performRpc(ln: ln, operation: "invoice", authToken: token, timeout_ms: default_timeout, params: params)
 }
 
-public func rpc_pay(ln: LNSocket, token: String, bolt11: String, amount_msat: Int64?) -> RequestRes<Pay>
+public func rpc_pay(ln: LNSocket, token: String, bolt11: String, amount_msat: Int64?, timeout_ms: Int32) -> RequestRes<Pay>
 {
     var params: Array<String> = [ bolt11 ]
     if amount_msat != nil {
         params.append("\(amount_msat!)msat")
     }
-    return performRpc(ln: ln, operation: "pay", authToken: token, timeout_ms: 30000, params: params)
+    return performRpc(ln: ln, operation: "pay", authToken: token, timeout_ms: timeout_ms, params: params)
 }
 
 public func rpc_listfunds(ln: LNSocket, token: String) -> RequestRes<ListFunds>
