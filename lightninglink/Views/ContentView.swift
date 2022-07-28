@@ -59,12 +59,14 @@ struct Funds {
     public static func from_listfunds(fs: ListFunds) -> Funds {
         var onchain_sats: Int64 = 0
         var channel_sats: Int64 = 0
+        //var our_sats: Int64 = 0
 
         let channels = fs.channels ?? []
         let outputs = fs.outputs ?? []
 
         for channel in channels {
-            channel_sats += channel.channel_sat
+            //our_sats += channel.our_amount_msat
+            channel_sats += channel.our_amount_msat / 1000
         }
 
         for output in outputs {
@@ -111,8 +113,8 @@ struct ContentView: View {
             return ""
         }
 
-        let fee = pay.msatoshi_sent - pay.msatoshi
-        return "-\(render_amount_msats(pay.msatoshi)) (\(render_amount_msats(fee)) fee)"
+        let fee = pay.amount_sent_msat - pay.amount_msat
+        return "-\(render_amount_msats(pay.amount_msat)) (\(render_amount_msats(fee)) fee)"
     }
 
     func receive_pay() {
@@ -151,7 +153,7 @@ struct ContentView: View {
                 }
 
                 HStack {
-                    Text("\(self.dashboard.info.msatoshi_fees_collected / 1000) sats earned")
+                    Text("\(self.dashboard.info.fees_collected_msat / 1000) sats earned")
                         .font(.footnote)
                         .foregroundColor(.gray)
 

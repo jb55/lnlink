@@ -43,8 +43,8 @@ public struct Channel: Decodable {
     //public var peer_id: String
     //public var connected: Bool
     //public var state: String
-    public var channel_sat: Int64
-    public var channel_total_sat: Int64
+    public var our_amount_msat: Int64
+    public var amount_msat: Int64
 }
 
 public struct InvoiceRes: Decodable {
@@ -111,7 +111,6 @@ public struct InvoiceDecode: Decodable {
     public var expiry: Int64?
     public var relative_expiry: Int64?
     public var payee: String?
-    public var msatoshi: Int64?
     public var quantity_min: Int?
     public var description: String?
     public var node_id: String?
@@ -145,10 +144,8 @@ public struct Pay: Decodable {
     public var payment_hash: String
     public var created_at: Float
     public var parts: Int
-    public var msatoshi: Int64
-    public var amount_msat: String
-    public var msatoshi_sent: Int64
-    public var amount_sent_msat: String
+    public var amount_msat: Int64
+    public var amount_sent_msat: Int64
     public var payment_preimage: String
     public var status: String
 }
@@ -159,11 +156,11 @@ public struct GetInfo: Decodable {
     public var color: String
     public var network: String
     public var num_peers: Int
-    public var msatoshi_fees_collected: Int
+    public var fees_collected_msat: Int
     public var num_active_channels: Int
     public var blockheight: Int
 
-    public static var empty = GetInfo(alias: "", id: "", color: "", network: "", num_peers: 0, msatoshi_fees_collected: 0, num_active_channels: 0, blockheight: 0)
+    public static var empty = GetInfo(alias: "", id: "", color: "", network: "", num_peers: 0, fees_collected_msat: 0, num_active_channels: 0, blockheight: 0)
 }
 
 public enum RequestErrorType: Error {
