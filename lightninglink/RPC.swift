@@ -396,13 +396,13 @@ public func rpc_invoice(ln: LNSocket, token: String, amount: InvoiceAmount = .an
 
     switch amount {
     case .amount(let val):
-        params["msatoshi"] = "\(val)msat"
+        params["amount_msat"] = "\(val)msat"
     case .any:
-        params["msatoshi"] = "any"
+        params["amount_msat"] = "any"
     case .min(let val):
-        params["msatoshi"] = "\(val)msat"
+        params["amount_msat"] = "\(val)msat"
     case .range(let min, _):
-        params["msatoshi"] = "\(min)msat"
+        params["amount_msat"] = "\(min)msat"
     }
 
     return performRpc(ln: ln, operation: "invoice", authToken: token, timeout_ms: default_timeout, params: params)
@@ -435,7 +435,7 @@ public func rpc_fetchinvoice(ln: LNSocket, token: String, req: FetchInvoiceReq) 
 
     if let pay_amt = req.pay_amt {
         let amt = pay_amt.amount + (pay_amt.tip ?? 0)
-        params["msatoshi"] = "\(amt)msat"
+        params["amount_msat"] = "\(amt)msat"
     }
 
     let timeout = req.timeout ?? 15
