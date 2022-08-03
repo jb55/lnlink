@@ -383,7 +383,7 @@ public func rpc_offer(ln: LNSocket, token: String, amount: InvoiceAmount = .any,
     return performRpc(ln: ln, operation: "offer", authToken: token, timeout_ms: default_timeout, params: params)
 }
 
-public func rpc_invoice(ln: LNSocket, token: String, amount: InvoiceAmount = .any, description: String? = nil, expiry: String? = nil) -> RequestRes<InvoiceRes> {
+public func rpc_invoice(ln: LNSocket, token: String, amount: InvoiceAmount = .any, description: String? = nil, expiry: UInt64? = nil) -> RequestRes<InvoiceRes> {
 
     let now = Date().timeIntervalSince1970
     let label = "lnlink-\(now)"
@@ -391,7 +391,7 @@ public func rpc_invoice(ln: LNSocket, token: String, amount: InvoiceAmount = .an
     var params: [String: String] = ["description": desc, "label": label]
 
     if let exp = expiry {
-        params["expiry"] = exp
+        params["expiry"] = "\(exp)"
     }
 
     switch amount {
@@ -408,12 +408,17 @@ public func rpc_invoice(ln: LNSocket, token: String, amount: InvoiceAmount = .an
     return performRpc(ln: ln, operation: "invoice", authToken: token, timeout_ms: default_timeout, params: params)
 }
 
-public func rpc_pay(ln: LNSocket, token: String, bolt11: String, amount_msat: Int64?, timeout_ms: Int32) -> RequestRes<Pay>
+public func rpc_pay(ln: LNSocket, token: String, bolt11: String, amount_msat: Int64?, timeout_ms: Int32, description: String?) -> RequestRes<Pay>
 {
-    var params: Array<String> = [ bolt11 ]
+    var params: [String: String] = ["bolt11": bolt11]
     if amount_msat != nil {
-        params.append("\(amount_msat!)msat")
+        params["amount_msat"] = "\(amount_msat!)"
     }
+    
+    if let desc = description {
+        params["description"] = desc
+    }
+    
     return performRpc(ln: ln, operation: "pay", authToken: token, timeout_ms: timeout_ms, params: params)
 }
 

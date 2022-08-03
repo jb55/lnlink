@@ -114,7 +114,10 @@ struct ReceiveView: View {
                 if !self.making && self.qr_data == nil {
                     Button("Receive") {
                         self.making = true
-                        make_invoice(lnlink: lnlink, expiry: "12h", description: self.description, amount: self.amount, issuer: self.issuer, is_offer: self.is_offer) { res in
+
+                        // 12h
+                        let h12 = UInt64(Date().timeIntervalSince1970 + 60 * 60 * 12)
+                        make_invoice(lnlink: lnlink, expiry: h12, description: self.description, amount: self.amount, issuer: self.issuer, is_offer: self.is_offer) { res in
                             switch res {
                             case .failure:
                                 self.making = false
@@ -162,7 +165,7 @@ func generate_qr(from string: String) -> Image {
     return Image(uiImage: uiimg)
 }
 
-func make_invoice(lnlink: LNLink, expiry: String, description: String?, amount: Int64?, issuer: String?, is_offer: Bool, callback: @escaping (RequestRes<String>) -> ()) {
+func make_invoice(lnlink: LNLink, expiry: UInt64, description: String?, amount: Int64?, issuer: String?, is_offer: Bool, callback: @escaping (RequestRes<String>) -> ()) {
     let ln = LNSocket()
 
     ln.genkey()
@@ -177,7 +180,7 @@ func make_invoice(lnlink: LNLink, expiry: String, description: String?, amount: 
         }
 
         let desc = description ?? "lnlink invoice"
-        let expiry = "12h"
+
         if is_offer {
             let res = rpc_offer(ln: ln, token: lnlink.token, amount: amt, description: desc, issuer: issuer)
             callback(res.map{ $0.bolt12 })

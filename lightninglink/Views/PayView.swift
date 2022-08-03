@@ -371,8 +371,8 @@ struct PayView: View {
         }
     }
 
-    func confirm_pay(ln: LNSocket?, inv: String, pay_amt: PayAmount?, timeout_ms: Int32) {
-        let res = confirm_payment(ln: ln, lnlink: self.lnlink, bolt11: inv, pay_amt: pay_amt, timeout_ms: timeout_ms)
+    func confirm_pay(ln: LNSocket?, inv: String, pay_amt: PayAmount?, timeout_ms: Int32, description: String?) {
+        let res = confirm_payment(ln: ln, lnlink: self.lnlink, bolt11: inv, pay_amt: pay_amt, timeout_ms: timeout_ms, description: description)
         switch res {
         case .left(let err):
             self.paying = false
@@ -419,7 +419,7 @@ struct PayView: View {
                     }
 
                     DispatchQueue.global(qos: .background).async {
-                        confirm_pay(ln: mln, inv: invstr, pay_amt: nil, timeout_ms: pay_timeout_ms)
+                        confirm_pay(ln: mln, inv: invstr, pay_amt: nil, timeout_ms: pay_timeout_ms, description: lnurlp.metadata)
                     }
                 case .offer:
                     self.error = "Got an offer from a lnurl pay request? What?"
@@ -463,7 +463,7 @@ struct PayView: View {
                     self.paying = false
                     self.error = err.description
                 case .success(let fetch_invoice):
-                    confirm_pay(ln: ln, inv: fetch_invoice.invoice, pay_amt: nil, timeout_ms: pay_timeout_ms)
+                    confirm_pay(ln: ln, inv: fetch_invoice.invoice, pay_amt: nil, timeout_ms: pay_timeout_ms, description: nil)
                 }
             }
         }
@@ -486,7 +486,7 @@ struct PayView: View {
             let pay_amt = get_pay_amount(invoice.amount)
             self.paying = true
             DispatchQueue.global(qos: .background).async {
-                confirm_pay(ln: mln, inv: invoice.invstr, pay_amt: pay_amt, timeout_ms: pay_timeout_ms)
+                confirm_pay(ln: mln, inv: invoice.invstr, pay_amt: pay_amt, timeout_ms: pay_timeout_ms, description: nil)
             }
 
         case .initial: fallthrough
@@ -683,7 +683,7 @@ public enum Either<L, R> {
     }
 }
 
-func confirm_payment(ln mln: LNSocket?, lnlink: LNLink, bolt11: String, pay_amt: PayAmount?, timeout_ms: Int32) -> Either<String, Pay> {
+func confirm_payment(ln mln: LNSocket?, lnlink: LNLink, bolt11: String, pay_amt: PayAmount?, timeout_ms: Int32, description: String?) -> Either<String, Pay> {
     let ln = mln ?? LNSocket()
 
     if mln == nil {
@@ -702,7 +702,8 @@ func confirm_payment(ln mln: LNSocket?, lnlink: LNLink, bolt11: String, pay_amt:
         token: lnlink.token,
         bolt11: bolt11,
         amount_msat: amount_msat,
-        timeout_ms: timeout_ms
+        timeout_ms: timeout_ms,
+        description: description
     )
 
     switch res {
