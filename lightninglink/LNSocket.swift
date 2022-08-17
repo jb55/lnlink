@@ -36,9 +36,8 @@ public class LNSocket {
     }
 
     func write(_ data: Data) -> Bool {
-        data.withUnsafeBytes { msg in
-            return lnsocket_write(self.ln, msg, UInt16(data.count)) != 0
-        }
+        var msg = Array(data)
+        return lnsocket_write(self.ln, &msg, UInt16(data.count)) != 0
     }
 
     func fd() -> Int32 {
@@ -66,9 +65,8 @@ public class LNSocket {
     }
     
     func pong(ping: Data) {
-        ping.withUnsafeBytes{ ping_ptr in
-            lnsocket_pong(self.ln, ping_ptr, UInt16(ping.count))
-        }
+        var ping_ptr = Array(ping)
+        lnsocket_pong(self.ln, &ping_ptr, UInt16(ping.count))
     }
 
     func perform_init() -> Bool {

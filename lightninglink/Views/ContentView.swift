@@ -38,6 +38,8 @@ public enum ActiveSheet: Identifiable {
         switch self {
         case .receive:
             return "receive"
+        case .auth:
+            return "auth"
         case .qr:
             return "qrcode"
         case .pay:
@@ -48,6 +50,7 @@ public enum ActiveSheet: Identifiable {
     case qr
     case receive
     case pay(DecodeType)
+    case auth(LNUrlAuth)
 }
 
 struct Funds {
@@ -205,6 +208,9 @@ struct ContentView: View {
         }
         .sheet(item: $active_sheet) { sheet in
             switch sheet {
+            case .auth(let auth):
+                AuthView(auth: auth, lnlink: lnlink)
+                
             case .qr:
                 CodeScannerView(codeTypes: SCAN_TYPES) { res in
                     switch res {
@@ -266,7 +272,11 @@ struct ContentView: View {
             // TODO: report that this is an lnlink, not an invoice
         case .lnurl(let lnurl):
             let decode: DecodeType = .lnurl(lnurl)
-            self.active_sheet = .pay(decode)
+            if let auth = is_lnurl_auth(lnurl) {
+                self.active_sheet = .auth(auth)
+            } else {
+                self.active_sheet = .pay(decode)
+            }
         }
     }
 

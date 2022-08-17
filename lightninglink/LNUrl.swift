@@ -146,6 +146,47 @@ func handle_lnurl_request<T: Decodable>(_ url: URL, completion: @escaping (Eithe
     task.resume()
 }
 
+public struct LNUrlAuth {
+    let k1: String
+    let tag: String
+    let url: URL
+    let host: String
+}
+
+func is_lnurl_auth(_ url: URL) -> LNUrlAuth? {
+    var components = URLComponents()
+    components.query = url.query
+    
+    guard let items = components.queryItems else {
+        return nil
+    }
+    
+    guard let host = url.host else {
+        return nil
+    }
+    
+    var k1: String? = nil
+    var tag: String? = nil
+    
+    for item in items {
+        if item.name == "k1" {
+            k1 = item.value
+        } else if item.name == "tag" && item.value == "login" {
+            tag = item.value
+        }
+    }
+    
+    guard let k1 = k1 else {
+        return nil
+    }
+
+    guard let tag = tag else {
+        return nil
+    }
+    
+    return LNUrlAuth(k1: k1, tag: tag, url: url, host: host)
+}
+
 func handle_lnurl(_ url: URL, completion: @escaping (LNUrl?) -> ()) {
     let task = URLSession.shared.dataTask(with: url) { (mdata, response, error) in
         guard let data = mdata else {

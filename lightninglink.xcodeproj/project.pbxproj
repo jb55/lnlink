@@ -33,6 +33,8 @@
 		4CCB0E2727C979F30026461C /* ScannerCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCB0E2327C979F30026461C /* ScannerCoordinator.swift */; };
 		4CCB0E2827C979F30026461C /* ScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCB0E2427C979F30026461C /* ScannerViewController.swift */; };
 		4CCB0E2B27CA71CA0026461C /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCB0E2A27CA71CA0026461C /* SetupView.swift */; };
+		4CD7641D28A205AB00B6928F /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD7641C28A205AB00B6928F /* AuthView.swift */; };
+		4CD7642028A28D7100B6928F /* Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD7641F28A28D7100B6928F /* Hex.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,6 +89,8 @@
 		4CCB0E2327C979F30026461C /* ScannerCoordinator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScannerCoordinator.swift; sourceTree = "<group>"; };
 		4CCB0E2427C979F30026461C /* ScannerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScannerViewController.swift; sourceTree = "<group>"; };
 		4CCB0E2A27CA71CA0026461C /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
+		4CD7641C28A205AB00B6928F /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		4CD7641F28A28D7100B6928F /* Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hex.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -143,6 +147,7 @@
 		4C641D172788FF2F002A36C9 /* lightninglink */ = {
 			isa = PBXGroup;
 			children = (
+				4CD7641E28A28D6700B6928F /* Util */,
 				4CCB0E2927CA71AA0026461C /* Views */,
 				4CCB0E1F27C979F30026461C /* CodeScanner */,
 				4C0359FE27AEEE8500FF92CE /* Info.plist */,
@@ -225,8 +230,17 @@
 				4C3DC97027D4829A00773021 /* SettingsView.swift */,
 				4C5EAC5527EE8544002A6FE5 /* ReceiveView.swift */,
 				4C5EAC5727EE8942002A6FE5 /* AmountInputView.swift */,
+				4CD7641C28A205AB00B6928F /* AuthView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		4CD7641E28A28D6700B6928F /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				4CD7641F28A28D7100B6928F /* Hex.swift */,
+			);
+			path = Util;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -361,6 +375,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4C5EAC5827EE8942002A6FE5 /* AmountInputView.swift in Sources */,
+				4CD7642028A28D7100B6928F /* Hex.swift in Sources */,
 				4C035A0027AEF90000FF92CE /* PayView.swift in Sources */,
 				4C873FD527A6EF3F008C972C /* LNSocket.swift in Sources */,
 				4C641D1B2788FF2F002A36C9 /* ContentView.swift in Sources */,
@@ -368,6 +383,7 @@
 				4CCB0E2727C979F30026461C /* ScannerCoordinator.swift in Sources */,
 				4C5EAC5427ED30A8002A6FE5 /* Rates.swift in Sources */,
 				4C641D492789083E002A36C9 /* lightninglink.c in Sources */,
+				4CD7641D28A205AB00B6928F /* AuthView.swift in Sources */,
 				4CCB0E2627C979F30026461C /* CodeScanner.swift in Sources */,
 				4CCB0E2827C979F30026461C /* ScannerViewController.swift in Sources */,
 				4C72DB2527DD9D9B00834545 /* QR.swift in Sources */,

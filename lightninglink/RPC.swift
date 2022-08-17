@@ -93,7 +93,7 @@ public enum Decode {
         }
     }
 
-    func amount_msat() -> String? {
+    func amount_msat() -> Int64? {
         switch self {
         case .invoice(let inv):
             return inv.amount_msat
@@ -114,7 +114,7 @@ public struct InvoiceDecode: Decodable {
     public var quantity_min: Int?
     public var description: String?
     public var node_id: String?
-    public var amount_msat: String?
+    public var amount_msat: Int64?
     public var vendor: String?
 }
 
@@ -137,6 +137,10 @@ public struct ListFunds: Decodable {
     public var channels: [Channel]?
 
     public static var empty = ListFunds(outputs: [], channels: [])
+}
+
+public struct MakeSecret: Decodable {
+    public let secret: String
 }
 
 public struct Pay: Decodable {
@@ -426,6 +430,12 @@ public func rpc_listfunds(ln: LNSocket, token: String) -> RequestRes<ListFunds>
 {
     let params: Array<String> = []
     return performRpc(ln: ln, operation: "listfunds", authToken: token, timeout_ms: default_timeout, params: params)
+}
+
+public func rpc_makesecret(ln: LNSocket, token: String, hex: String) -> RequestRes<MakeSecret>
+{
+    let params: Array<String> = [hex]
+    return performRpc(ln: ln, operation: "makesecret", authToken: token, timeout_ms: 1000, params: params)
 }
 
 public func rpc_decode(ln: LNSocket, token: String, inv: String) -> RequestRes<InvoiceDecode>

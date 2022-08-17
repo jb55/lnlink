@@ -77,6 +77,7 @@ public enum PayState {
     case decoded(DecodeType)
     case ready(Invoice)
     case invoice_request(RequestInvoice)
+    case auth(LNUrlAuth)
 }
 
 let default_placeholder = "10,000"
@@ -253,10 +254,7 @@ struct PayView: View {
         guard let invoice = self.invoice else {
             return
         }
-        guard let amount_msat_str = invoice.amount_msat() else {
-            return
-        }
-        guard let amount_msat = parse_msat(amount_msat_str) else {
+        guard let amount_msat = invoice.amount_msat() else {
             return
         }
 
@@ -468,12 +466,18 @@ struct PayView: View {
             }
         }
     }
-
+    
+    func handle_confirm_auth(ln mln: LNSocket?, auth: LNUrlAuth) {
+    }
+    
     func handle_confirm(ln mln: LNSocket?) {
         // clear last error on confirm
         self.error = nil
 
         switch self.state {
+        case .auth(let auth):
+            return handle_confirm_auth(ln: mln, auth: auth)
+            
         case .invoice_request(let reqinv):
             switch reqinv {
             case .offer(let offer):
@@ -507,6 +511,8 @@ struct PayView: View {
 
     func handle_state_change() {
             switch self.state {
+            case .auth:
+                break
             case .ready:
                 break
             case .invoice_request:
@@ -539,7 +545,11 @@ struct PayView: View {
 
         switch_state(.invoice_request(.lnurl(lnurlp)))
     }
-
+    
+    func handle_lnurl_auth(ln: LNSocket, auth: LNUrlAuth) {
+        switch_state(.auth(auth))
+    }
+    
     func handle_decode(_ oldln: LNSocket?, decode: DecodeType) {
         let ln = oldln ?? LNSocket()
         if oldln == nil {
@@ -577,7 +587,7 @@ struct PayView: View {
             } else if decoded.type == "bolt11 invoice" || decoded.type == "bolt12 invoice" {
                 var amount: InvoiceAmount = .any
                 if decoded.amount_msat != nil {
-                    guard let amt = parse_msat(decoded.amount_msat!) else {
+                    guard let amt = decoded.amount_msat else {
                         self.error = "invalid msat amount: \(decoded.amount_msat!)"
                         return
                     }
@@ -723,6 +733,7 @@ func is_ready(_ state: PayState) -> ReadyInvoice? {
         return .direct(invoice)
     case .invoice_request(let invreq):
         return .requested(invreq)
+    case .auth: fallthrough
     case .initial: fallthrough
     case .decoding: fallthrough
     case .decoded:
@@ -774,7 +785,7 @@ struct PayView_Previews: PreviewProvider {
 
 func handle_bolt12_offer(ln: LNSocket, decoded: InvoiceDecode, inv: String) -> Either<String, PayState> {
     if decoded.amount_msat != nil {
-        guard let min_amt = parse_msat(decoded.amount_msat!) else {
+        guard let min_amt = decoded.amount_msat else {
             return .left("Error parsing amount_msat: '\(decoded.amount_msat!)'")
         }
         let offer = Offer(offer: inv, amount: .min(min_amt), decoded: decoded)
@@ -789,6 +800,7 @@ func handle_bolt12_offer(ln: LNSocket, decoded: InvoiceDecode, inv: String) -> E
 func should_show_confirm(_ state: PayState) -> Bool {
     switch state {
     case .ready: fallthrough
+    case .auth: fallthrough
     case .invoice_request:
         return true
 

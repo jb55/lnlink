@@ -110,7 +110,9 @@ struct ReceiveView: View {
                 }
 
                 Spacer()
-
+                
+                
+                
                 if !self.making && self.qr_data == nil {
                     Button("Receive") {
                         self.making = true
