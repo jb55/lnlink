@@ -73,7 +73,7 @@ struct Funds {
         }
 
         for output in outputs {
-            onchain_sats += output.value
+            onchain_sats += output.amount_msat / 1000
         }
 
         return Funds(onchain_sats: onchain_sats, channel_sats: channel_sats)

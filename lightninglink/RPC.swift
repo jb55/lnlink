@@ -30,8 +30,8 @@ public struct RpcErrorData: Decodable, CustomStringConvertible {
 public struct Output: Decodable {
     //public var txid: String
     //public var output: Int
-    public var value: Int64
-    //public var amount_msat: String
+    //public var value: Int64
+    public var amount_msat: Int64
     //public var scriptpubkey: String
     //public var address: String
     //public var status: String
