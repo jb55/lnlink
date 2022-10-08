@@ -31,7 +31,7 @@ public struct Output: Decodable {
     //public var txid: String
     //public var output: Int
     //public var value: Int64
-    public var amount_msat: Int64
+    public var amount_msat: MSat
     //public var scriptpubkey: String
     //public var address: String
     //public var status: String
@@ -43,8 +43,8 @@ public struct Channel: Decodable {
     //public var peer_id: String
     //public var connected: Bool
     //public var state: String
-    public var our_amount_msat: Int64
-    public var amount_msat: Int64
+    public var our_amount_msat: MSat
+    public var amount_msat: MSat
 }
 
 public struct InvoiceRes: Decodable {
@@ -96,7 +96,7 @@ public enum Decode {
     func amount_msat() -> Int64? {
         switch self {
         case .invoice(let inv):
-            return inv.amount_msat
+            return inv.amount_msat?.msat
         case .lnurlp:
             return nil
         }
@@ -114,7 +114,7 @@ public struct InvoiceDecode: Decodable {
     public var quantity_min: Int?
     public var description: String?
     public var node_id: String?
-    public var amount_msat: Int64?
+    public var amount_msat: MSat?
     public var vendor: String?
 }
 
@@ -148,10 +148,36 @@ public struct Pay: Decodable {
     public var payment_hash: String
     public var created_at: Float
     public var parts: Int
-    public var amount_msat: Int64
-    public var amount_sent_msat: Int64
+    public var amount_msat: MSat
+    public var amount_sent_msat: MSat
     public var payment_preimage: String
     public var status: String
+}
+
+public struct MSat: Decodable {
+    public var msat: Int64
+    
+    public init(msats: Int64) {
+        self.msat = msats
+    }
+    
+    public init(from decoder: Decoder) throws {
+        if let int = try? decoder.singleValueContainer().decode(Int64.self) {
+            self.msat = int
+            return
+        }
+        if let string = try? decoder.singleValueContainer().decode(String.self) {
+            if let msat = parse_msat(string) {
+                self.msat = msat
+                return
+            }
+        }
+        throw MSatError.missingValue
+    }
+    
+    public enum MSatError: Error {
+        case missingValue
+    }
 }
 
 public struct GetInfo: Decodable {
@@ -160,11 +186,11 @@ public struct GetInfo: Decodable {
     public var color: String
     public var network: String
     public var num_peers: Int
-    public var fees_collected_msat: Int
+    public var fees_collected_msat: MSat
     public var num_active_channels: Int
     public var blockheight: Int
 
-    public static var empty = GetInfo(alias: "", id: "", color: "", network: "", num_peers: 0, fees_collected_msat: 0, num_active_channels: 0, blockheight: 0)
+    public static var empty = GetInfo(alias: "", id: "", color: "", network: "", num_peers: 0, fees_collected_msat: .init(msats: 0), num_active_channels: 0, blockheight: 0)
 }
 
 public enum RequestErrorType: Error {

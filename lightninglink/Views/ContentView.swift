@@ -69,11 +69,11 @@ struct Funds {
 
         for channel in channels {
             //our_sats += channel.our_amount_msat
-            channel_sats += channel.our_amount_msat / 1000
+            channel_sats += channel.our_amount_msat.msat / 1000
         }
 
         for output in outputs {
-            onchain_sats += output.amount_msat / 1000
+            onchain_sats += output.amount_msat.msat / 1000
         }
 
         return Funds(onchain_sats: onchain_sats, channel_sats: channel_sats)
@@ -116,8 +116,8 @@ struct ContentView: View {
             return ""
         }
 
-        let fee = pay.amount_sent_msat - pay.amount_msat
-        return "-\(render_amount_msats(pay.amount_msat)) (\(render_amount_msats(fee)) fee)"
+        let fee = pay.amount_sent_msat.msat - pay.amount_msat.msat
+        return "-\(render_amount_msats(pay.amount_msat.msat)) (\(render_amount_msats(fee)) fee)"
     }
 
     func receive_pay() {
@@ -156,7 +156,7 @@ struct ContentView: View {
                 }
 
                 HStack {
-                    Text("\(self.dashboard.info.fees_collected_msat / 1000) sats earned")
+                    Text("\(self.dashboard.info.fees_collected_msat.msat / 1000) sats earned")
                         .font(.footnote)
                         .foregroundColor(.gray)
 

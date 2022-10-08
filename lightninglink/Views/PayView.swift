@@ -592,7 +592,7 @@ struct PayView: View {
                         return
                     }
 
-                    amount = .amount(amt)
+                    amount = .amount(amt.msat)
                 }
 
                 self.state = .ready(Invoice(invstr: inv, amount: amount))
@@ -788,7 +788,7 @@ func handle_bolt12_offer(ln: LNSocket, decoded: InvoiceDecode, inv: String) -> E
         guard let min_amt = decoded.amount_msat else {
             return .left("Error parsing amount_msat: '\(decoded.amount_msat!)'")
         }
-        let offer = Offer(offer: inv, amount: .min(min_amt), decoded: decoded)
+        let offer = Offer(offer: inv, amount: .min(min_amt.msat), decoded: decoded)
         return .right(.invoice_request(.offer(offer)))
     } else {
         let offer = Offer(offer: inv, amount: .any, decoded: decoded)
