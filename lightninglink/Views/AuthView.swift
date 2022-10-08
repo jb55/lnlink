@@ -75,7 +75,7 @@ struct AuthView: View {
             return
         }
         
-        guard var msg = hex_decode(auth.k1) else {
+        guard let msg = hex_decode(auth.k1) else {
             self.error = "Could not decode k1 challenge string as hex: '\(auth.k1)'"
             return
         }
@@ -83,6 +83,7 @@ struct AuthView: View {
         
         let opts = UInt32(SECP256K1_CONTEXT_SIGN)
         guard let ctx = secp256k1_context_create(opts) else {
+            self.error = "Could not create secp256k1 context"
             return
         }
         

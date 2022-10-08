@@ -38,7 +38,7 @@ class lightninglinkTests: XCTestCase {
         let amt = mamt!
 
         switch amt {
-        case .amount(let _):
+        case .amount:
             XCTAssert(false)
         case .any:
             XCTAssert(true)

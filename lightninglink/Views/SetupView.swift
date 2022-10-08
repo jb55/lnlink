@@ -29,7 +29,7 @@ public enum SetupResult {
 public enum SetupViewState {
     case initial
     case validating(LNLink)
-    case validated
+    case validated(LNLink)
 }
 
 func initial_state() -> SetupViewState {
@@ -46,7 +46,7 @@ struct SetupView: View {
     @State var state: SetupViewState = initial_state()
     @State var error: String? = nil
     @State var dashboard: Dashboard = .empty
-    @State var lnlink: LNLink? = nil
+    @State var has_clipboard_lnlink: Bool = false
     @State var scan_invoice: String? = nil
 
     func perform_validation(_ lnlink: LNLink) {
@@ -64,9 +64,8 @@ struct SetupView: View {
                     self.error = str
                 case .success(let info, let funds):
                     save_lnlink(lnlink: lnlink)
-                    self.lnlink = lnlink
                     self.dashboard = Dashboard(info: info, funds: funds)
-                    self.state = .validated
+                    self.state = .validated(lnlink)
                     self.error = nil
                 }
             }
@@ -83,7 +82,20 @@ struct SetupView: View {
                 .foregroundColor(.gray)
 
             Spacer()
+            
+            Button("Use LNLink from Clipboard") {
+                guard let lnlink = check_clipboard_lnlink() else {
+                    self.error = "No clipboard lnlink found"
+                    return
+                }
 
+                self.state = .validating(lnlink)
+            }
+            .foregroundColor(Color.blue)
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(16)
+            
             Button("Scan LNLink QR Code") {
                 self.active_sheet = .qr
             }
@@ -149,8 +161,8 @@ struct SetupView: View {
                 setup_view()
             case .validating(let lnlink):
                 validating_view(lnlink: lnlink)
-            case .validated:
-                ContentView(dashboard: self.dashboard, lnlink: self.lnlink!, scan_invoice: self.scan_invoice)
+            case .validated(let lnlink):
+                ContentView(dashboard: self.dashboard, lnlink: lnlink, scan_invoice: self.scan_invoice)
             }
         }
     }
@@ -162,6 +174,24 @@ struct SetupView_Previews: PreviewProvider {
     }
 }
 
+func check_clipboard_lnlink() -> LNLink? {
+    guard UIPasteboard.general.hasStrings else {
+        return nil
+    }
+    
+    guard let clip = UIPasteboard.general.string else {
+        return nil
+    }
+    
+    let m_lnlink = parse_auth_qr(clip)
+    
+    switch m_lnlink {
+    case .left:
+        return nil
+    case .right(let lnlink):
+        return lnlink
+    }
+}
 
 func get_qs_param(qs: URLComponents, param: String) -> String? {
     return qs.queryItems?.first(where: { $0.name == param })?.value
@@ -235,4 +265,9 @@ func validate_connection(lnlink: LNLink, completion: @escaping (SetupResult) -> 
             completion(.success(getinfo, listfunds))
         }
     }
+}
+
+
+func handle_scan(_ str: String) {
+    
 }

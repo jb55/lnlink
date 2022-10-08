@@ -39,10 +39,6 @@ func fetch_dashboard(lnlink: LNLink) -> Either<String, Dashboard> {
 
 @main
 struct lightninglinkApp: App {
-    @State var dashboard: Dashboard?
-    @State var lnlink: LNLink? = load_lnlink()
-    @State var error: String?
-
     var body: some Scene {
         WindowGroup {
             SetupView()
