@@ -82,6 +82,8 @@ struct Funds {
 let SCAN_TYPES: [AVMetadataObject.ObjectType] = [.qr]
 
 struct ContentView: View {
+    @Environment(\.colorScheme) var colorScheme
+
     @State private var active_sheet: ActiveSheet? = nil
     @State private var active_alert: ActiveAlert? = nil
     @State private var has_alert: Bool = false
@@ -135,13 +137,26 @@ struct ContentView: View {
     }
 
     func main_content() -> some View {
+        let accentColor = colorScheme == .dark ? .white : .black
         NavigationView {
         VStack(alignment: .hcentered) {
             VStack{
                 HStack {
-                    VStack {
-                    Text(self.dashboard.info.alias)
-                        .font(.title)
+                    VStack(alignment: .leading) {
+                        Text(self.dashboard.info.alias)
+                            .font(.title)
+                        HStack {
+                            Text(self.dashboard.info.id.prefix(10) + "...")
+                                .font(Font.body)
+                                .foregroundColor(Color(hexString: self.dashboard.info.color) ?? accentColor)
+                            Button {
+                                UIPasteboard.general.string = self.dashboard.info.id
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            } label: {
+                                Image(systemName: "doc.on.doc")
+                                    .accentColor(accentColor)
+                            }
+                        }
                     }
 
                     Spacer()

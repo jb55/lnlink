@@ -33,6 +33,7 @@
 		4CCB0E2727C979F30026461C /* ScannerCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCB0E2327C979F30026461C /* ScannerCoordinator.swift */; };
 		4CCB0E2827C979F30026461C /* ScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCB0E2427C979F30026461C /* ScannerViewController.swift */; };
 		4CCB0E2B27CA71CA0026461C /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCB0E2A27CA71CA0026461C /* SetupView.swift */; };
+		F76173CD296540C10056347F /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76173CC296540C10056347F /* Color.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,6 +88,7 @@
 		4CCB0E2327C979F30026461C /* ScannerCoordinator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScannerCoordinator.swift; sourceTree = "<group>"; };
 		4CCB0E2427C979F30026461C /* ScannerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScannerViewController.swift; sourceTree = "<group>"; };
 		4CCB0E2A27CA71CA0026461C /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
+		F76173CC296540C10056347F /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -219,6 +221,7 @@
 		4CCB0E2927CA71AA0026461C /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				F76173CB296540B80056347F /* Helpers */,
 				4C0359FF27AEF90000FF92CE /* PayView.swift */,
 				4C641D1A2788FF2F002A36C9 /* ContentView.swift */,
 				4CCB0E2A27CA71CA0026461C /* SetupView.swift */,
@@ -227,6 +230,14 @@
 				4C5EAC5727EE8942002A6FE5 /* AmountInputView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		F76173CB296540B80056347F /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				F76173CC296540C10056347F /* Color.swift */,
+			);
+			path = Helpers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -371,6 +382,7 @@
 				4CCB0E2627C979F30026461C /* CodeScanner.swift in Sources */,
 				4CCB0E2827C979F30026461C /* ScannerViewController.swift in Sources */,
 				4C72DB2527DD9D9B00834545 /* QR.swift in Sources */,
+				F76173CD296540C10056347F /* Color.swift in Sources */,
 				4C035A0427AEFD2F00FF92CE /* Invoice.swift in Sources */,
 				4C641D192788FF2F002A36C9 /* lightninglinkApp.swift in Sources */,
 				4CCB0E2B27CA71CA0026461C /* SetupView.swift in Sources */,
