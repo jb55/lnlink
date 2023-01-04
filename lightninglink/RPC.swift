@@ -27,6 +27,17 @@ public struct RpcErrorData: Decodable, CustomStringConvertible {
     }
 }
 
+extension String {
+    func getMilliSatoshiValue() -> Int64? {
+        let parts = self.components(separatedBy: "msat")
+        if parts.count == 2 {
+            return Int64(parts[0]) ?? 0
+        } else {
+            return nil
+        }
+    }
+}
+
 public struct Output: Decodable {
     //public var txid: String
     //public var output: Int
@@ -43,8 +54,24 @@ public struct Channel: Decodable {
     //public var peer_id: String
     //public var connected: Bool
     //public var state: String
-    public var our_amount_msat: Int64
-    public var amount_msat: Int64
+    public var our_amount_msat: Int64? {
+        get {
+            return _our_amount_msat.getMilliSatoshiValue()
+        }
+    }
+    public var amount_msat: Int64? {
+        get {
+            return _amount_msat.getMilliSatoshiValue()
+        }
+    }
+    
+    private var _our_amount_msat: String
+    private var _amount_msat: String
+    
+    enum CodingKeys: String, CodingKey {
+        case _our_amount_msat = "our_amount_msat"
+        case _amount_msat = "amount_msat"
+    }
 }
 
 public struct InvoiceRes: Decodable {
@@ -156,11 +183,11 @@ public struct GetInfo: Decodable {
     public var color: String
     public var network: String
     public var num_peers: Int
-    public var fees_collected_msat: Int
+    public var msatoshi_fees_collected: Int
     public var num_active_channels: Int
     public var blockheight: Int
 
-    public static var empty = GetInfo(alias: "", id: "", color: "", network: "", num_peers: 0, fees_collected_msat: 0, num_active_channels: 0, blockheight: 0)
+    public static var empty = GetInfo(alias: "", id: "", color: "", network: "", num_peers: 0, msatoshi_fees_collected: 0, num_active_channels: 0, blockheight: 0)
 }
 
 public enum RequestErrorType: Error {

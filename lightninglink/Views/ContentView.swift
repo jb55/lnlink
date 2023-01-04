@@ -65,8 +65,10 @@ struct Funds {
         let outputs = fs.outputs ?? []
 
         for channel in channels {
-            //our_sats += channel.our_amount_msat
-            channel_sats += channel.our_amount_msat / 1000
+            guard let our_amount_msat = channel.our_amount_msat else {
+                continue
+            }
+            channel_sats += our_amount_msat / 1000
         }
 
         for output in outputs {
@@ -153,7 +155,7 @@ struct ContentView: View {
                 }
 
                 HStack {
-                    Text("\(self.dashboard.info.fees_collected_msat / 1000) sats earned")
+                    Text("\(self.dashboard.info.msatoshi_fees_collected / 1000) sats earned")
                         .font(.footnote)
                         .foregroundColor(.gray)
 
