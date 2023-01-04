@@ -115,8 +115,7 @@ struct ContentView: View {
             return ""
         }
 
-        let fee = pay.amount_sent_msat - pay.amount_msat
-        return "-\(render_amount_msats(pay.amount_msat)) (\(render_amount_msats(fee)) fee)"
+        return "\(pay.amount_msat)"
     }
 
     func receive_pay() {

@@ -171,8 +171,8 @@ public struct Pay: Decodable {
     public var payment_hash: String
     public var created_at: Float
     public var parts: Int
-    public var amount_msat: Int64
-    public var amount_sent_msat: Int64
+    public var amount_msat: String
+    public var amount_sent_msat: String
     public var payment_preimage: String
     public var status: String
 }
