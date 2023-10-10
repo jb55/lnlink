@@ -39,6 +39,9 @@ func fetch_dashboard(lnlink: LNLink) -> Either<String, Dashboard> {
 
 @main
 struct lightninglinkApp: App {
+    init() {
+        preventCrash()
+    }
     var body: some Scene {
         WindowGroup {
             SetupView()
@@ -89,4 +92,10 @@ func load_lnlink() -> LNLink? {
     guard let host = m_host else { return nil }
 
     return LNLink(token: token, host: host, node_id: node_id)
+}
+
+private extension lightninglinkApp {
+    func preventCrash() {
+        signal(SIGPIPE, SIG_IGN)
+    }
 }
